@@ -13,7 +13,18 @@
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npm ls react-native-worklets react-native-reanimated 2>&1)",
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx expo install --fix 2>&1)",
       "Bash(ls:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "WebSearch",
+      "WebFetch(domain:expo.dev)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx expo install expo@next --fix 2>&1)",
+      "Bash(nvm install:*)",
+      "Bash(nvm use:*)",
+      "Bash(npm install:*)",
+      "Bash(npx expo:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(npm ls:*)",
+      "Bash(npm view:*)"
     ]
   }
 }
