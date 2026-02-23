@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Pressable } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useComparison } from '../../hooks/useComparison';
 import { ComparisonBar } from '../../components/ComparisonBar';
@@ -50,7 +50,8 @@ export default function FriendCompareScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
 
         <View style={styles.header}>
@@ -97,7 +98,10 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.md,
+    gap: 4,
   },
   backText: {
     color: colors.accent,

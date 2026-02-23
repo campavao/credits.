@@ -8,6 +8,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
+import { Ionicons } from '@expo/vector-icons';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
 import { SWIPE_THRESHOLD } from '../lib/constants';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
@@ -84,7 +85,7 @@ export function SwipeDeck({
     const finalPct = total > 0 ? Math.round((seenCount / total) * 100) : 0;
     return (
       <View style={styles.doneContainer}>
-        <Text style={styles.doneEmoji}>🎬</Text>
+        <Ionicons name="film" size={64} color={colors.accent} style={styles.doneIcon} />
         <Text style={styles.doneTitle}>All done!</Text>
         <Text style={styles.doneStat}>
           You've seen {seenCount} of {total}
@@ -134,8 +135,14 @@ export function SwipeDeck({
       </GestureDetector>
 
       <View style={styles.hints}>
-        <Text style={styles.hintLeft}>← Skip</Text>
-        <Text style={styles.hintRight}>Seen →</Text>
+        <View style={styles.hintRow}>
+          <Ionicons name="chevron-back" size={16} color={colors.error} />
+          <Text style={styles.hintLeft}>Skip</Text>
+        </View>
+        <View style={styles.hintRow}>
+          <Text style={styles.hintRight}>Seen</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.success} />
+        </View>
       </View>
     </View>
   );
@@ -166,17 +173,21 @@ const styles = StyleSheet.create({
     width: CARD_WIDTH,
     paddingTop: spacing.md,
   },
+  hintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    opacity: 0.6,
+  },
   hintLeft: {
     color: colors.error,
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    opacity: 0.6,
   },
   hintRight: {
     color: colors.success,
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    opacity: 0.6,
   },
   doneContainer: {
     flex: 1,
@@ -185,8 +196,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     gap: spacing.sm,
   },
-  doneEmoji: {
-    fontSize: 64,
+  doneIcon: {
     marginBottom: spacing.md,
   },
   doneTitle: {

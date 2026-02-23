@@ -6,6 +6,7 @@ import type {
   TMDBCredits,
   TMDBPersonDetails,
   TMDBPersonCredits,
+  TMDBPersonSearchResult,
 } from '../types/tmdb';
 
 const API_KEY = process.env.EXPO_PUBLIC_TMDB_API_KEY!;
@@ -45,6 +46,13 @@ export async function getPersonDetails(id: number) {
 
 export async function getPersonCredits(id: number) {
   return tmdbFetch<TMDBPersonCredits>(`/person/${id}/combined_credits`);
+}
+
+export async function searchPerson(query: string, page = 1) {
+  return tmdbFetch<{ results: TMDBPersonSearchResult[]; total_pages: number; total_results: number }>(
+    '/search/person',
+    { query, page: String(page), include_adult: 'false' }
+  );
 }
 
 export function getPosterUrl(path: string | null, size: keyof typeof POSTER_SIZES = 'medium') {

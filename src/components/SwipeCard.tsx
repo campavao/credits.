@@ -1,5 +1,6 @@
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
 import Animated, { SharedValue, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { getPosterUrl } from '../lib/tmdb';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 
@@ -90,7 +91,7 @@ export function SwipeCard({
         <Image source={{ uri: posterUrl }} style={styles.poster} />
       ) : (
         <View style={[styles.poster, styles.posterPlaceholder]}>
-          <Text style={styles.posterPlaceholderText}>🎬</Text>
+          <Ionicons name="film-outline" size={64} color={colors.gray[500]} />
         </View>
       )}
 

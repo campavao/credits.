@@ -1,5 +1,6 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { getPosterUrl } from '../lib/tmdb';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 
@@ -29,7 +30,7 @@ export function TitleCard({ id, title, mediaType, posterPath, releaseYear, onPre
         <Image source={{ uri: posterUrl }} style={styles.poster} />
       ) : (
         <View style={[styles.poster, styles.placeholder]}>
-          <Text style={styles.placeholderText}>🎬</Text>
+          <Ionicons name="film-outline" size={28} color={colors.gray[500]} />
         </View>
       )}
       <View style={styles.info}>
@@ -61,9 +62,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  placeholderText: {
-    fontSize: 28,
-  },
+  placeholderText: {},
   info: {
     flex: 1,
     justifyContent: 'center',

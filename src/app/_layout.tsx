@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -17,7 +16,17 @@ export default function RootLayout() {
             contentStyle: { backgroundColor: colors.black },
             animation: 'slide_from_right',
           }}
-        />
+        >
+          <Stack.Screen
+            name="add-modal"
+            options={{
+              presentation: 'transparentModal',
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen name="actor-search" />
+          <Stack.Screen name="search" />
+        </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
   );

@@ -1,5 +1,6 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { getProfileUrl } from '../lib/tmdb';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 
@@ -22,7 +23,7 @@ export function ActorRow({ id, name, profilePath, character }: ActorRowProps) {
         <Image source={{ uri: imageUrl }} style={styles.avatar} />
       ) : (
         <View style={[styles.avatar, styles.placeholder]}>
-          <Text style={styles.placeholderText}>👤</Text>
+          <Ionicons name="person-outline" size={20} color={colors.gray[500]} />
         </View>
       )}
       <View style={styles.info}>

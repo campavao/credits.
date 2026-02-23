@@ -1,5 +1,6 @@
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 export default function VerifyScreen() {
@@ -8,7 +9,7 @@ export default function VerifyScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.icon}>✉️</Text>
+        <Ionicons name="mail" size={48} color={colors.accent} style={styles.icon} />
         <Text style={styles.title}>Check your email</Text>
         <Text style={styles.subtitle}>
           We sent a magic link to{'\n'}
@@ -38,7 +39,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
   },
   icon: {
-    fontSize: 48,
     marginBottom: spacing.lg,
   },
   title: {

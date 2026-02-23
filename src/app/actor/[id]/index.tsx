@@ -1,11 +1,12 @@
 import { View, Text, Image, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useActor } from '../../hooks/useActor';
-import { useSeenTitles } from '../../hooks/useSeenTitles';
-import { TitleCard } from '../../components/TitleCard';
-import { getProfileUrl } from '../../lib/tmdb';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { Ionicons } from '@expo/vector-icons';
+import { useActor } from '../../../hooks/useActor';
+import { useSeenTitles } from '../../../hooks/useSeenTitles';
+import { TitleCard } from '../../../components/TitleCard';
+import { getProfileUrl } from '../../../lib/tmdb';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../../lib/theme';
 
 export default function ActorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -32,7 +33,8 @@ export default function ActorDetailScreen() {
         ListHeaderComponent={
           <>
             <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backText}>← Back</Text>
+              <Ionicons name="chevron-back" size={20} color={colors.accent} />
+              <Text style={styles.backText}>Back</Text>
             </Pressable>
 
             <View style={styles.header}>
@@ -40,7 +42,7 @@ export default function ActorDetailScreen() {
                 <Image source={{ uri: profileUrl }} style={styles.photo} />
               ) : (
                 <View style={[styles.photo, styles.photoPlaceholder]}>
-                  <Text style={styles.photoPlaceholderText}>👤</Text>
+                  <Ionicons name="person-outline" size={48} color={colors.gray[500]} />
                 </View>
               )}
               <Text style={styles.name}>{details.name}</Text>
@@ -86,7 +88,7 @@ export default function ActorDetailScreen() {
               />
               {seen && (
                 <View style={styles.seenBadge}>
-                  <Text style={styles.seenBadgeText}>✓</Text>
+                  <Ionicons name="checkmark" size={14} color={colors.white} />
                 </View>
               )}
             </View>
@@ -107,7 +109,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.md,
+    gap: 4,
   },
   backText: {
     color: colors.accent,

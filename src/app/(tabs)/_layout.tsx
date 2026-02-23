@@ -1,15 +1,7 @@
-import { Tabs } from 'expo-router';
-import { Text, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import { Tabs, router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, fontSize } from '../../lib/theme';
-
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    index: '🎬',
-    friends: '👥',
-    profile: '👤',
-  };
-  return <Text style={styles.icon}>{icons[name] || '•'}</Text>;
-}
 
 export default function TabLayout() {
   return (
@@ -32,24 +24,39 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ focused }) => <TabIcon name="index" focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
         name="friends"
         options={{
           title: 'Friends',
-          tabBarIcon: ({ focused }) => <TabIcon name="friends" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
-        name="profile"
+        name="add"
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            router.push('/add-modal');
+          },
+        }}
+        options={{
+          title: '',
+          tabBarIcon: () => (
+            <View style={styles.addButton}>
+              <Ionicons name="add" size={32} color={colors.white} />
+            </View>
+          ),
+          tabBarLabel: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="index"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <TabIcon name="profile" focused={focused} />,
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+          ),
         }}
       />
     </Tabs>
@@ -57,7 +64,18 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
-  icon: {
-    fontSize: 22,
+  addButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 20,
+    shadowColor: colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
 });

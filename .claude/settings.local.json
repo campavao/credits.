@@ -8,7 +8,12 @@
       "Bash(true:*)",
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase --version 2>&1)",
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase link --project-ref ztlogtwepxkxjnzrlbfn 2>&1)",
-      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase db push 2>&1)"
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase db push 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx expo install @expo/vector-icons 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npm ls react-native-worklets react-native-reanimated 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx expo install --fix 2>&1)",
+      "Bash(ls:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

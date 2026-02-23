@@ -1,6 +1,7 @@
 import { View, Text, Image, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useTitle } from '../../hooks/useTitle';
 import { useSeenTitles } from '../../hooks/useSeenTitles';
 import { ActorRow } from '../../components/ActorRow';
@@ -44,7 +45,8 @@ export default function TitleDetailScreen() {
         ListHeaderComponent={
           <>
             <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Text style={styles.backText}>← Back</Text>
+              <Ionicons name="chevron-back" size={20} color={colors.accent} />
+              <Text style={styles.backText}>Back</Text>
             </Pressable>
 
             {posterUrl && (
@@ -71,7 +73,11 @@ export default function TitleDetailScreen() {
                 onPress={handleToggleSeen}
               >
                 <Text style={[styles.watchButtonText, seen && styles.watchButtonTextSeen]}>
-                  {seen ? '✓ Watched' : 'Mark as Watched'}
+                  {seen ? (
+                    <>
+                      <Ionicons name="checkmark-circle" size={18} color={colors.success} />{' Watched'}
+                    </>
+                  ) : 'Mark as Watched'}
                 </Text>
               </Pressable>
             </View>
@@ -104,7 +110,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: spacing.md,
+    gap: 4,
   },
   backText: {
     color: colors.accent,

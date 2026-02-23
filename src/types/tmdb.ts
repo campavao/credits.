@@ -72,3 +72,10 @@ export interface TMDBPersonCredits {
   id: number;
   cast: TMDBPersonCreditEntry[];
 }
+
+export interface TMDBPersonSearchResult {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  known_for_department: string;
+}

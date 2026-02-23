@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useActor } from '../../../hooks/useActor';
 import { useSeenTitles } from '../../../hooks/useSeenTitles';
 import { SwipeDeck } from '../../../components/SwipeDeck';
@@ -40,8 +41,9 @@ export default function ActorSwipeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <Text style={styles.backText}>← Back</Text>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
         </Pressable>
         <Text style={styles.actorName}>{details.name}</Text>
         <View style={styles.spacer} />
@@ -72,6 +74,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   backText: {
     color: colors.accent,

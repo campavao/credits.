@@ -1,57 +1,70 @@
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useSearch } from '../../hooks/useSearch';
-import { useSeenTitles } from '../../hooks/useSeenTitles';
-import { SearchBar } from '../../components/ui/SearchBar';
-import { TitleCard } from '../../components/TitleCard';
-import { colors, spacing, fontSize, fontWeight } from '../../lib/theme';
-import type { TMDBSearchResult } from '../../types/tmdb';
+import { useAuth } from '../../providers/AuthProvider';
+import { useStats } from '../../hooks/useStats';
+import { StatCard } from '../../components/StatCard';
+import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
-export default function HomeScreen() {
-  const { query, setQuery, results, loading } = useSearch();
-  const { isSeen } = useSeenTitles();
+export default function ProfileScreen() {
+  const { profile, signOut } = useAuth();
+  const { stats, loading } = useStats();
 
-  const getReleaseYear = (item: TMDBSearchResult) => {
-    const date = item.release_date || item.first_air_date;
-    return date ? date.substring(0, 4) : undefined;
+  const handleSignOut = () => {
+    Alert.alert('Sign Out', 'Are you sure?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign Out', style: 'destructive', onPress: signOut },
+    ]);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.header}>credits.</Text>
-      <SearchBar
-        value={query}
-        onChangeText={setQuery}
-        placeholder="Search movies & TV shows..."
-      />
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.accent} />
-        </View>
-      ) : !query.trim() ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>Search for movies and TV shows to track</Text>
-        </View>
-      ) : results.length === 0 ? (
-        <View style={styles.center}>
-          <Text style={styles.emptyText}>No results found</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={results}
-          keyExtractor={(item) => `${item.media_type}-${item.id}`}
-          renderItem={({ item }) => (
-            <TitleCard
-              id={item.id}
-              title={item.title || item.name || ''}
-              mediaType={item.media_type as 'movie' | 'tv'}
-              posterPath={item.poster_path}
-              releaseYear={getReleaseYear(item)}
-            />
+      <ScrollView contentContainerStyle={styles.scroll}>
+        <View style={styles.profileHeader}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {(profile?.display_name || profile?.username || '?')[0].toUpperCase()}
+            </Text>
+          </View>
+          <Text style={styles.name}>
+            {profile?.display_name || profile?.username || 'User'}
+          </Text>
+          {profile?.username && (
+            <Text style={styles.username}>@{profile.username}</Text>
           )}
-          contentContainerStyle={styles.list}
-        />
-      )}
+        </View>
+
+        <View style={styles.statsGrid}>
+          <StatCard
+            label="Watched"
+            value={stats?.total_watched ?? 0}
+            loading={loading}
+          />
+          <StatCard
+            label="Actors"
+            value={stats?.unique_actors ?? 0}
+            loading={loading}
+          />
+          <StatCard
+            label="Friends"
+            value={stats?.friends_count ?? 0}
+            loading={loading}
+          />
+          <StatCard
+            label="Top Actor"
+            value={stats?.most_completed_actor_name || '-'}
+            subtitle={stats?.most_completed_pct ? `${stats.most_completed_pct}%` : undefined}
+            loading={loading}
+          />
+        </View>
+
+        <Pressable style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutText}>Sign Out</Text>
+        </Pressable>
+
+        <Text style={styles.attribution}>
+          Film data provided by TMDB
+        </Text>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -61,23 +74,61 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.black,
   },
-  header: {
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-    color: colors.white,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.sm,
+  scroll: {
+    padding: spacing.md,
+    paddingBottom: spacing.xxl,
   },
-  center: {
-    flex: 1,
+  profileHeader: {
+    alignItems: 'center',
+    paddingVertical: spacing.xl,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: spacing.md,
   },
-  emptyText: {
-    color: colors.gray[500],
+  avatarText: {
+    color: colors.white,
+    fontSize: fontSize.display,
+    fontWeight: fontWeight.bold,
+  },
+  name: {
+    color: colors.white,
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+  },
+  username: {
+    color: colors.gray[400],
     fontSize: fontSize.md,
+    marginTop: spacing.xs,
   },
-  list: {
-    paddingBottom: spacing.xxl,
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.md,
+    marginTop: spacing.lg,
+  },
+  signOutButton: {
+    marginTop: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.error,
+    alignItems: 'center',
+  },
+  signOutText: {
+    color: colors.error,
+    fontSize: fontSize.md,
+    fontWeight: fontWeight.semibold,
+  },
+  attribution: {
+    color: colors.gray[600],
+    fontSize: fontSize.xs,
+    textAlign: 'center',
+    marginTop: spacing.xl,
   },
 });
