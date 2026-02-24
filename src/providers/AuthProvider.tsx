@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 import { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types/database';
@@ -9,11 +8,10 @@ interface AuthContextType {
   user: AuthUser | null;
   profile: User | null;
   loading: boolean;
-  signInWithEmail: (email: string) => Promise<{ error: Error | null }>;
+  signInWithPhone: (phone: string) => Promise<{ error: Error | null }>;
+  verifyOtp: (phone: string, token: string) => Promise<{ error: Error | null }>;
   signUpWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<void>;
-  signInWithApple: () => Promise<void>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -55,15 +53,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithEmail = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: Platform.OS === 'web'
-          ? window.location.origin
-          : 'credits://',
-      },
-    });
+  const signInWithPhone = async (phone: string) => {
+    const { error } = await supabase.auth.signInWithOtp({ phone });
+    return { error: error as Error | null };
+  };
+
+  const verifyOtp = async (phone: string, token: string) => {
+    const { error } = await supabase.auth.verifyOtp({ phone, token, type: 'sms' });
     return { error: error as Error | null };
   };
 
@@ -75,14 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signInWithPassword = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error as Error | null };
-  };
-
-  const signInWithGoogle = async () => {
-    // TODO: Implement with expo-auth-session
-  };
-
-  const signInWithApple = async () => {
-    // TODO: Implement with expo-auth-session
   };
 
   const signOut = async () => {
@@ -102,11 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user: session?.user ?? null,
         profile,
         loading,
-        signInWithEmail,
+        signInWithPhone,
+        verifyOtp,
         signUpWithPassword,
         signInWithPassword,
-        signInWithGoogle,
-        signInWithApple,
         signOut,
         refreshProfile,
       }}

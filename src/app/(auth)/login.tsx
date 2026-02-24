@@ -14,23 +14,26 @@ import { useAuth } from '../../providers/AuthProvider';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 export default function LoginScreen() {
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'magic' | 'password'>('password');
+  const [mode, setMode] = useState<'phone' | 'email'>('phone');
   const [isSignUp, setIsSignUp] = useState(true);
-  const { signInWithEmail, signUpWithPassword, signInWithPassword } = useAuth();
+  const { signInWithPhone, signUpWithPassword, signInWithPassword } = useAuth();
 
-  const handleMagicLink = async () => {
-    if (!email.trim()) return;
+  const handlePhoneSubmit = async () => {
+    const digits = phone.replace(/\D/g, '');
+    if (!digits) return;
+    const fullPhone = digits.startsWith('1') ? `+${digits}` : `+1${digits}`;
     setLoading(true);
-    const { error } = await signInWithEmail(email.trim());
+    const { error } = await signInWithPhone(fullPhone);
     setLoading(false);
 
     if (error) {
       Alert.alert('Error', error.message);
     } else {
-      router.push({ pathname: '/(auth)/verify', params: { email: email.trim() } });
+      router.push({ pathname: '/(auth)/verify', params: { phone: fullPhone } });
     }
   };
 
@@ -61,75 +64,80 @@ export default function LoginScreen() {
         <Text style={styles.tagline}>track actors, not just movies</Text>
 
         <View style={styles.form}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email address"
-            placeholderTextColor={colors.gray[500]}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoComplete="email"
-          />
+          {mode === 'phone' ? (
+            <>
+              <View style={styles.phoneRow}>
+                <Text style={styles.phonePrefix}>+1</Text>
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="(555) 123-4567"
+                  placeholderTextColor={colors.gray[500]}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  autoComplete="tel"
+                />
+              </View>
 
-          {mode === 'password' && (
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              placeholderTextColor={colors.gray[500]}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              autoCapitalize="none"
-            />
+              <Pressable
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handlePhoneSubmit}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? 'Sending...' : 'Send Code'}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={() => setMode('email')}>
+                <Text style={styles.switchText}>Use email instead</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Email address"
+                placeholderTextColor={colors.gray[500]}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={colors.gray[500]}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+                autoCapitalize="none"
+              />
+
+              <Pressable
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handlePasswordAuth}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={() => setIsSignUp(!isSignUp)}>
+                <Text style={styles.switchText}>
+                  {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={() => setMode('phone')}>
+                <Text style={styles.switchText}>Use phone number instead</Text>
+              </Pressable>
+            </>
           )}
-
-          <Pressable
-            style={[styles.button, loading && styles.buttonDisabled]}
-            onPress={mode === 'magic' ? handleMagicLink : handlePasswordAuth}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading
-                ? 'Loading...'
-                : mode === 'magic'
-                  ? 'Send Magic Link'
-                  : isSignUp
-                    ? 'Sign Up'
-                    : 'Sign In'}
-            </Text>
-          </Pressable>
-
-          {mode === 'password' && (
-            <Pressable onPress={() => setIsSignUp(!isSignUp)}>
-              <Text style={styles.switchText}>
-                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-              </Text>
-            </Pressable>
-          )}
-
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Pressable
-            style={styles.socialButton}
-            onPress={() => setMode(mode === 'magic' ? 'password' : 'magic')}
-          >
-            <Text style={styles.socialButtonText}>
-              {mode === 'magic' ? 'Use Email & Password' : 'Use Magic Link'}
-            </Text>
-          </Pressable>
-
-          <Pressable style={styles.socialButton} onPress={() => {}}>
-            <Text style={styles.socialButtonText}>Continue with Google</Text>
-          </Pressable>
-
-          <Pressable style={styles.socialButton} onPress={() => {}}>
-            <Text style={styles.socialButtonText}>Continue with Apple</Text>
-          </Pressable>
         </View>
       </View>
     </KeyboardAvoidingView>
@@ -172,6 +180,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: surface.border,
   },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: surface.raised,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: surface.border,
+  },
+  phonePrefix: {
+    color: colors.gray[400],
+    fontSize: fontSize.md,
+    paddingLeft: spacing.md,
+    fontWeight: fontWeight.medium,
+  },
+  phoneInput: {
+    flex: 1,
+    color: colors.white,
+    fontSize: fontSize.md,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.md,
+  },
   button: {
     backgroundColor: colors.accent,
     paddingVertical: spacing.md,
@@ -190,33 +219,5 @@ const styles = StyleSheet.create({
     color: colors.gray[400],
     fontSize: fontSize.sm,
     textAlign: 'center',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.sm,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: surface.border,
-  },
-  dividerText: {
-    color: colors.gray[500],
-    marginHorizontal: spacing.md,
-    fontSize: fontSize.sm,
-  },
-  socialButton: {
-    backgroundColor: surface.raised,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: surface.border,
-  },
-  socialButtonText: {
-    color: colors.white,
-    fontSize: fontSize.md,
-    fontWeight: fontWeight.medium,
   },
 });
