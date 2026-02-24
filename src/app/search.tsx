@@ -1,17 +1,17 @@
-import { View, Text, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Pressable } from 'react-native';
 import { useSearch } from '../hooks/useSearch';
-import { useSeenTitles } from '../hooks/useSeenTitles';
 import { SearchBar } from '../components/ui/SearchBar';
 import { TitleCard } from '../components/TitleCard';
-import { colors, spacing, fontSize, fontWeight } from '../lib/theme';
+import { Skeleton } from '../components/ui/Skeleton';
+import { surface, colors, spacing, fontSize, fontWeight } from '../lib/theme';
 import type { TMDBSearchResult } from '../types/tmdb';
 
 export default function SearchScreen() {
   const { query, setQuery, results, loading } = useSearch();
-  const { isSeen } = useSeenTitles();
 
   const getReleaseYear = (item: TMDBSearchResult) => {
     const date = item.release_date || item.first_air_date;
@@ -34,8 +34,16 @@ export default function SearchScreen() {
         placeholder="Search movies & TV shows..."
       />
       {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator size="large" color={colors.accent} />
+        <View style={styles.loadingContainer}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <Skeleton.Rect width={80} height={120} />
+              <View style={styles.skeletonText}>
+                <Skeleton.Text width="80%" height={16} />
+                <Skeleton.Text width="40%" height={14} />
+              </View>
+            </View>
+          ))}
         </View>
       ) : !query.trim() ? (
         <View style={styles.center}>
@@ -68,7 +76,7 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   headerRow: {
     flexDirection: 'row',
@@ -103,6 +111,19 @@ const styles = StyleSheet.create({
   emptyText: {
     color: colors.gray[500],
     fontSize: fontSize.md,
+  },
+  loadingContainer: {
+    padding: spacing.md,
+    gap: spacing.md,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  skeletonText: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: spacing.sm,
   },
   list: {
     paddingBottom: spacing.xxl,

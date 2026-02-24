@@ -1,5 +1,6 @@
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { View, Text, StyleSheet } from 'react-native';
+import { Skeleton } from './ui/Skeleton';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 
 interface StatCardProps {
   label: string;
@@ -12,7 +13,7 @@ export function StatCard({ label, value, subtitle, loading }: StatCardProps) {
   return (
     <View style={styles.card}>
       {loading ? (
-        <ActivityIndicator color={colors.accent} />
+        <Skeleton.Text width={60} height={22} />
       ) : (
         <>
           <Text style={styles.value} numberOfLines={1}>
@@ -30,7 +31,7 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: colors.gray[900],
+    backgroundColor: surface.raised,
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     alignItems: 'center',

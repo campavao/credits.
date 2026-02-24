@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../providers/AuthProvider';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -139,7 +139,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   content: {
     flex: 1,
@@ -163,14 +163,14 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   input: {
-    backgroundColor: colors.gray[900],
+    backgroundColor: surface.raised,
     color: colors.white,
     fontSize: fontSize.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.gray[800],
+    borderColor: surface.border,
   },
   button: {
     backgroundColor: colors.accent,
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.border,
   },
   dividerText: {
     color: colors.gray[500],
@@ -207,12 +207,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   socialButton: {
-    backgroundColor: colors.gray[900],
+    backgroundColor: surface.raised,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.gray[800],
+    borderColor: surface.border,
   },
   socialButtonText: {
     color: colors.white,

@@ -1,5 +1,5 @@
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 import type { User } from '../types/database';
 
 interface FriendRowProps {
@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
   },
   placeholder: {
     justifyContent: 'center',

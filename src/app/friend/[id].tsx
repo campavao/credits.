@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, StyleSheet, Pressable } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useComparison } from '../../hooks/useComparison';
+import { useSharedTitles } from '../../hooks/useSharedTitles';
 import { ComparisonBar } from '../../components/ComparisonBar';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
+import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 import type { User } from '../../types/database';
 
 export default function FriendCompareScreen() {
@@ -18,11 +22,11 @@ export default function FriendCompareScreen() {
     score: number;
   } | null>(null);
   const { getOverlapScore, loading } = useComparison();
+  const { titles: sharedTitles, loading: sharedLoading } = useSharedTitles(id);
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   useEffect(() => {
     async function load() {
-      // Load friend profile
       const { data } = await supabase
         .from('users')
         .select('*')
@@ -31,7 +35,6 @@ export default function FriendCompareScreen() {
       setFriend(data);
       setLoadingProfile(false);
 
-      // Get overlap score
       const score = await getOverlapScore(id);
       setOverlap(score);
     }
@@ -40,20 +43,29 @@ export default function FriendCompareScreen() {
 
   if (loadingProfile || !friend) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+        <View style={styles.skeletonHeader}>
+          <Skeleton.Circle width={96} />
+          <Skeleton.Text width={160} height={22} />
+          <Skeleton.Text width={100} height={40} />
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
 
+        {/* Friend header */}
         <View style={styles.header}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -63,12 +75,15 @@ export default function FriendCompareScreen() {
           <Text style={styles.name}>
             {friend.display_name || friend.username || 'User'}
           </Text>
+          {friend.username && (
+            <Text style={styles.username}>@{friend.username}</Text>
+          )}
         </View>
 
-        {/* Overlap Score */}
+        {/* Compatibility Score */}
         <View style={styles.scoreCard}>
           {loading ? (
-            <ActivityIndicator color={colors.accent} />
+            <Skeleton.Text width={120} height={56} />
           ) : overlap ? (
             <>
               <Text style={styles.scoreLabel}>Film Compatibility</Text>
@@ -81,6 +96,45 @@ export default function FriendCompareScreen() {
             <Text style={styles.scoreLabel}>No comparison data yet</Text>
           )}
         </View>
+
+        {/* Shared Titles */}
+        {sharedTitles.length > 0 && (
+          <HorizontalScrollRow
+            title="Shared Titles"
+            data={sharedTitles}
+            loading={sharedLoading}
+            keyExtractor={(t) => String(t.title_id)}
+            renderItem={(title) => (
+              <PosterCard
+                id={title.title_id}
+                title={title.title}
+                posterPath={title.poster_path}
+                seen
+                onPress={() =>
+                  router.push({
+                    pathname: '/title/[id]',
+                    params: { id: title.title_id, mediaType: title.media_type },
+                  })
+                }
+              />
+            )}
+            renderSkeleton={() => <PosterCardSkeleton />}
+          />
+        )}
+
+        {/* Comparison bars */}
+        {overlap && (
+          <View style={styles.comparisonSection}>
+            <ComparisonBar
+              label="Total Watched"
+              valueA={overlap.shared_count}
+              valueB={overlap.shared_count}
+              total={overlap.total_unique}
+              labelA="Shared"
+              labelB="Total"
+            />
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -89,10 +143,7 @@ export default function FriendCompareScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
-  },
-  loader: {
-    flex: 1,
+    backgroundColor: surface.base,
   },
   scroll: {
     paddingBottom: spacing.xxl,
@@ -108,22 +159,27 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: fontWeight.medium,
   },
-  header: {
+  skeletonHeader: {
     alignItems: 'center',
     padding: spacing.md,
     gap: spacing.md,
   },
+  header: {
+    alignItems: 'center',
+    padding: spacing.md,
+    gap: spacing.sm,
+  },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.gray[800],
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: surface.overlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     color: colors.white,
-    fontSize: fontSize.display,
+    fontSize: fontSize.hero,
     fontWeight: fontWeight.bold,
   },
   name: {
@@ -131,8 +187,12 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xxl,
     fontWeight: fontWeight.bold,
   },
+  username: {
+    color: colors.gray[400],
+    fontSize: fontSize.md,
+  },
   scoreCard: {
-    backgroundColor: colors.gray[900],
+    backgroundColor: surface.raised,
     margin: spacing.md,
     padding: spacing.xl,
     borderRadius: borderRadius.lg,
@@ -154,5 +214,8 @@ const styles = StyleSheet.create({
     color: colors.gray[500],
     fontSize: fontSize.sm,
     textAlign: 'center',
+  },
+  comparisonSection: {
+    marginTop: spacing.md,
   },
 });

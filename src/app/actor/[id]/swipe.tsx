@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useActor } from '../../../hooks/useActor';
 import { useSeenTitles } from '../../../hooks/useSeenTitles';
 import { SwipeDeck } from '../../../components/SwipeDeck';
-import { colors, spacing, fontSize, fontWeight } from '../../../lib/theme';
+import { colors, spacing, fontSize, fontWeight, surface } from '../../../lib/theme';
 import type { TMDBPersonCreditEntry } from '../../../types/tmdb';
 
 export default function ActorSwipeScreen() {
@@ -63,7 +63,7 @@ export default function ActorSwipeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   loader: {
     flex: 1,

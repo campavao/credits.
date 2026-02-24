@@ -1,7 +1,7 @@
 import { Redirect } from 'expo-router';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import { useAuth } from '../providers/AuthProvider';
-import { colors } from '../lib/theme';
+import { colors, surface } from '../lib/theme';
 
 export default function Index() {
   const { session, loading } = useAuth();
@@ -18,7 +18,7 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  return <Redirect href="/(tabs)" />;
+  return <Redirect href="/(tabs)/home" />;
 }
 
 const styles = StyleSheet.create({
@@ -26,6 +26,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
 });

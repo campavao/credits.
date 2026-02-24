@@ -1,4 +1,4 @@
-import { View, Text, Image, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Image, FlatList, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -6,7 +6,8 @@ import { useTitle } from '../../hooks/useTitle';
 import { useSeenTitles } from '../../hooks/useSeenTitles';
 import { ActorRow } from '../../components/ActorRow';
 import { getPosterUrl } from '../../lib/tmdb';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../../lib/theme';
 import type { TMDBMovieDetails, TMDBTVDetails } from '../../types/tmdb';
 
 export default function TitleDetailScreen() {
@@ -17,8 +18,16 @@ export default function TitleDetailScreen() {
 
   if (loading || !details) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.skeletonContent}>
+          <Skeleton.Rect width="100%" height={350} borderRadius={0} />
+          <View style={{ padding: spacing.md, gap: spacing.sm }}>
+            <Skeleton.Text width="70%" height={24} />
+            <Skeleton.Text width="30%" height={16} />
+            <Skeleton.Text width="100%" height={14} />
+            <Skeleton.Text width="90%" height={14} />
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -104,9 +113,9 @@ export default function TitleDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
-  loader: {
+  skeletonContent: {
     flex: 1,
   },
   backButton: {
@@ -145,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
   },
   badge: {
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,

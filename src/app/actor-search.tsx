@@ -1,10 +1,11 @@
-import { View, Text, TextInput, FlatList, Pressable, Image, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, FlatList, Pressable, Image, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useActorSearch } from '../hooks/useActorSearch';
 import { getProfileUrl } from '../lib/tmdb';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { Skeleton } from '../components/ui/Skeleton';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 
 export default function ActorSearchScreen() {
   const { query, setQuery, results, loading } = useActorSearch();
@@ -39,7 +40,17 @@ export default function ActorSearchScreen() {
       </View>
 
       {loading && (
-        <ActivityIndicator color={colors.accent} style={styles.loader} />
+        <View style={styles.skeletonList}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <View key={i} style={styles.skeletonRow}>
+              <Skeleton.Circle width={48} />
+              <View style={{ flex: 1, gap: spacing.xs }}>
+                <Skeleton.Text width={140} height={16} />
+                <Skeleton.Text width={80} height={14} />
+              </View>
+            </View>
+          ))}
+        </View>
       )}
 
       <FlatList
@@ -83,7 +94,7 @@ export default function ActorSearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   header: {
     flexDirection: 'row',
@@ -113,7 +124,7 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.gray[900],
+    backgroundColor: surface.raised,
     marginHorizontal: spacing.md,
     marginVertical: spacing.sm,
     borderRadius: borderRadius.md,
@@ -126,8 +137,15 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     paddingVertical: spacing.md,
   },
-  loader: {
+  skeletonList: {
+    paddingHorizontal: spacing.md,
+    gap: spacing.md,
     marginTop: spacing.md,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
   },
   list: {
     paddingBottom: spacing.xxl,
@@ -142,7 +160,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
   },
   avatarPlaceholder: {
     justifyContent: 'center',

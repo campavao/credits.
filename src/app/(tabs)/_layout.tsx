@@ -1,7 +1,7 @@
 import { View, StyleSheet } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fontSize } from '../../lib/theme';
+import { colors, fontSize, surface } from '../../lib/theme';
 
 export default function TabLayout() {
   return (
@@ -9,8 +9,8 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.gray[950],
-          borderTopColor: colors.gray[800],
+          backgroundColor: surface.base,
+          borderTopColor: surface.border,
           borderTopWidth: 0.5,
           height: 85,
           paddingTop: 8,
@@ -24,11 +24,20 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="friends"
+        name="home"
         options={{
-          title: 'Friends',
+          title: 'Home',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: 'Search',
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={24} color={color} />
           ),
         }}
       />
@@ -37,7 +46,7 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            router.push('/add-modal');
+            router.push('/actor-search');
           },
         }}
         options={{
@@ -48,6 +57,15 @@ export default function TabLayout() {
             </View>
           ),
           tabBarLabel: () => null,
+        }}
+      />
+      <Tabs.Screen
+        name="friends"
+        options={{
+          title: 'Friends',
+          tabBarIcon: ({ focused, color }) => (
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen

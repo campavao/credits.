@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { AuthProvider } from '../providers/AuthProvider';
-import { colors } from '../lib/theme';
+import { surface } from '../lib/theme';
 
 export default function RootLayout() {
   return (
@@ -13,19 +13,11 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: colors.black },
+            contentStyle: { backgroundColor: surface.base },
             animation: 'slide_from_right',
           }}
         >
-          <Stack.Screen
-            name="add-modal"
-            options={{
-              presentation: 'transparentModal',
-              animation: 'fade',
-            }}
-          />
           <Stack.Screen name="actor-search" />
-          <Stack.Screen name="search" />
         </Stack>
       </AuthProvider>
     </GestureHandlerRootView>
@@ -35,6 +27,6 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
 });

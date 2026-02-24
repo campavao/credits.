@@ -48,6 +48,15 @@ export async function getPersonCredits(id: number) {
   return tmdbFetch<TMDBPersonCredits>(`/person/${id}/combined_credits`);
 }
 
+export async function getTrending(
+  mediaType: 'movie' | 'tv' | 'all' = 'all',
+  timeWindow: 'day' | 'week' = 'week'
+) {
+  return tmdbFetch<{ results: TMDBSearchResult[]; total_pages: number }>(
+    `/trending/${mediaType}/${timeWindow}`
+  );
+}
+
 export async function searchPerson(query: string, page = 1) {
   return tmdbFetch<{ results: TMDBPersonSearchResult[]; total_pages: number; total_results: number }>(
     '/search/person',

@@ -1,12 +1,32 @@
-import { View, Text, Image, FlatList, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Dimensions, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useActor } from '../../../hooks/useActor';
 import { useSeenTitles } from '../../../hooks/useSeenTitles';
-import { TitleCard } from '../../../components/TitleCard';
+import { HeroCard, HeroCardSkeleton } from '../../../components/HeroCard';
+import { HorizontalScrollRow } from '../../../components/HorizontalScrollRow';
+import { PosterCard, PosterCardSkeleton } from '../../../components/PosterCard';
+import { StarRating } from '../../../components/StarRating';
+import { GradientStatBar } from '../../../components/GradientStatBar';
+import { Skeleton } from '../../../components/ui/Skeleton';
+import { useSpringPressable } from '../../../lib/animations';
 import { getProfileUrl } from '../../../lib/tmdb';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../../lib/theme';
+import { surface, colors, spacing, fontSize, fontWeight, borderRadius, springs } from '../../../lib/theme';
+
+const { height: SCREEN_HEIGHT } = Dimensions.get('window');
+
+function SwipeButton({ onPress }: { onPress: () => void }) {
+  const { animatedStyle, onPressIn, onPressOut } = useSpringPressable();
+  return (
+    <Animated.View style={animatedStyle}>
+      <Pressable style={styles.swipeButton} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
+        <Text style={styles.swipeButtonText}>Start Swiping</Text>
+      </Pressable>
+    </Animated.View>
+  );
+}
 
 export default function ActorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,8 +36,21 @@ export default function ActorDetailScreen() {
 
   if (loading || !details) {
     return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+        <HeroCardSkeleton height={SCREEN_HEIGHT * 0.45} />
+        <View style={styles.skeletonContent}>
+          <Skeleton.Text width="60%" height={20} />
+          <Skeleton.Rect width="100%" height={12} style={{ marginTop: spacing.md }} />
+          <View style={styles.skeletonRow}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <PosterCardSkeleton key={i} />
+            ))}
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -25,77 +58,90 @@ export default function ActorDetailScreen() {
   const seenCount = filmography.filter((f) => isSeen(f.id)).length;
   const totalCount = filmography.length;
   const completionPct = totalCount > 0 ? Math.round((seenCount / totalCount) * 100) : 0;
-  const profileUrl = getProfileUrl(details.profile_path, 'medium');
+  const profileUrl = getProfileUrl(details.profile_path, 'original');
+
+  // Compute average vote from filmography
+  const votedEntries = filmography.filter((f) => (f as any).vote_average != null);
+  const avgVote =
+    votedEntries.length > 0
+      ? votedEntries.reduce((sum, f) => sum + ((f as any).vote_average || 0), 0) / votedEntries.length
+      : 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <FlatList
-        ListHeaderComponent={
-          <>
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={20} color={colors.accent} />
-              <Text style={styles.backText}>Back</Text>
-            </Pressable>
+      <Animated.ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
 
-            <View style={styles.header}>
-              {profileUrl ? (
-                <Image source={{ uri: profileUrl }} style={styles.photo} />
-              ) : (
-                <View style={[styles.photo, styles.photoPlaceholder]}>
-                  <Ionicons name="person-outline" size={48} color={colors.gray[500]} />
-                </View>
-              )}
-              <Text style={styles.name}>{details.name}</Text>
+        {/* Hero photo */}
+        <HeroCard
+          imageUrl={profileUrl}
+          name={details.name}
+          height={SCREEN_HEIGHT * 0.45}
+          style={{ marginHorizontal: spacing.md }}
+        />
 
-              <View style={styles.completion}>
-                <Text style={styles.completionText}>
-                  {seenCount} / {totalCount} seen
-                </Text>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, { width: `${completionPct}%` }]} />
-                </View>
-                <Text style={styles.completionPct}>{completionPct}%</Text>
-              </View>
+        {/* Star rating */}
+        {avgVote > 0 && (
+          <View style={styles.ratingRow}>
+            <StarRating rating={avgVote} size={20} />
+            <Text style={styles.ratingText}>{avgVote.toFixed(1)}</Text>
+          </View>
+        )}
 
-              <Pressable
-                style={styles.swipeButton}
-                onPress={() =>
-                  router.push({ pathname: '/actor/[id]/swipe', params: { id: actorId } })
-                }
-              >
-                <Text style={styles.swipeButtonText}>Start Swiping</Text>
-              </Pressable>
-            </View>
+        {/* Stats pills */}
+        <View style={styles.statsRow}>
+          <View style={styles.pill}>
+            <Text style={styles.pillValue}>{seenCount}/{totalCount}</Text>
+            <Text style={styles.pillLabel}>seen</Text>
+          </View>
+          <View style={styles.pill}>
+            <Text style={styles.pillValue}>{completionPct}%</Text>
+            <Text style={styles.pillLabel}>complete</Text>
+          </View>
+        </View>
 
-            <Text style={styles.sectionTitle}>Filmography</Text>
-          </>
-        }
-        data={filmography}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => {
-          const releaseDate = item.release_date || item.first_air_date;
-          const year = releaseDate ? releaseDate.substring(0, 4) : undefined;
-          const seen = isSeen(item.id);
+        {/* Completion bar */}
+        <View style={styles.barSection}>
+          <GradientStatBar label="Filmography" value={seenCount} total={totalCount} />
+        </View>
 
-          return (
-            <View style={seen ? styles.seenItem : undefined}>
-              <TitleCard
+        {/* Start Swiping CTA */}
+        <View style={styles.ctaSection}>
+          <SwipeButton
+            onPress={() =>
+              router.push({ pathname: '/actor/[id]/swipe', params: { id: actorId } })
+            }
+          />
+        </View>
+
+        {/* Filmography horizontal scroll */}
+        <HorizontalScrollRow
+          title="Filmography"
+          data={filmography}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={(item) => {
+            const seen = isSeen(item.id);
+            return (
+              <PosterCard
                 id={item.id}
-                title={item.title || item.name || ''}
-                mediaType={item.media_type}
+                title={item.title || item.name}
                 posterPath={item.poster_path}
-                releaseYear={year}
+                seen={seen}
+                onPress={() =>
+                  router.push({
+                    pathname: '/title/[id]',
+                    params: { id: item.id, mediaType: item.media_type },
+                  })
+                }
               />
-              {seen && (
-                <View style={styles.seenBadge}>
-                  <Ionicons name="checkmark" size={14} color={colors.white} />
-                </View>
-              )}
-            </View>
-          );
-        }}
-        contentContainerStyle={styles.list}
-      />
+            );
+          }}
+          renderSkeleton={() => <PosterCardSkeleton />}
+        />
+      </Animated.ScrollView>
     </SafeAreaView>
   );
 }
@@ -103,10 +149,10 @@ export default function ActorDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
-  loader: {
-    flex: 1,
+  scroll: {
+    paddingBottom: spacing.xxl,
   },
   backButton: {
     flexDirection: 'row',
@@ -119,96 +165,67 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     fontWeight: fontWeight.medium,
   },
-  header: {
-    alignItems: 'center',
+  skeletonContent: {
     padding: spacing.md,
-    gap: spacing.md,
+    gap: spacing.sm,
   },
-  photo: {
-    width: 120,
-    height: 120,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.gray[800],
+  skeletonRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
   },
-  photoPlaceholder: {
-    justifyContent: 'center',
+  ratingRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
   },
-  photoPlaceholderText: {
-    fontSize: 48,
-  },
-  name: {
-    color: colors.white,
-    fontSize: fontSize.xxl,
-    fontWeight: fontWeight.bold,
-  },
-  completion: {
-    width: '100%',
-    alignItems: 'center',
-    gap: spacing.xs,
-  },
-  completionText: {
+  ratingText: {
     color: colors.gray[400],
     fontSize: fontSize.sm,
   },
-  progressBar: {
-    width: '100%',
-    height: 8,
-    backgroundColor: colors.gray[800],
-    borderRadius: borderRadius.full,
-    overflow: 'hidden',
+  statsRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
   },
-  progressFill: {
-    height: '100%',
-    backgroundColor: colors.accent,
+  pill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: surface.raised,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
-  completionPct: {
-    color: colors.accent,
-    fontSize: fontSize.lg,
+  pillValue: {
+    color: colors.white,
+    fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
+  },
+  pillLabel: {
+    color: colors.gray[400],
+    fontSize: fontSize.sm,
+  },
+  barSection: {
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.md,
+  },
+  ctaSection: {
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.lg,
   },
   swipeButton: {
     backgroundColor: colors.accent,
     paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    borderRadius: borderRadius.md,
-    width: '100%',
+    borderRadius: borderRadius.full,
     alignItems: 'center',
   },
   swipeButtonText: {
     color: colors.white,
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
-  },
-  sectionTitle: {
-    color: colors.white,
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-    paddingHorizontal: spacing.md,
-    paddingTop: spacing.lg,
-    paddingBottom: spacing.sm,
-  },
-  list: {
-    paddingBottom: spacing.xxl,
-  },
-  seenItem: {
-    position: 'relative',
-  },
-  seenBadge: {
-    position: 'absolute',
-    right: spacing.md,
-    top: spacing.md,
-    backgroundColor: colors.success,
-    width: 24,
-    height: 24,
-    borderRadius: borderRadius.full,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  seenBadgeText: {
-    color: colors.white,
-    fontSize: 14,
-    fontWeight: fontWeight.bold,
   },
 });

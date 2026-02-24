@@ -4,16 +4,36 @@ import {
   Text,
   FlatList,
   Pressable,
-  ActivityIndicator,
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import Animated from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import { useFriends } from '../../hooks/useFriends';
+import { useStaggeredEntrance } from '../../lib/animations';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { FriendRow } from '../../components/FriendRow';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 import type { User } from '../../types/database';
+
+function StaggeredFriendRow({ index, children }: { index: number; children: React.ReactNode }) {
+  const animatedStyle = useStaggeredEntrance(index);
+  return <Animated.View style={animatedStyle}>{children}</Animated.View>;
+}
+
+function FriendRowSkeleton() {
+  return (
+    <View style={styles.skeletonRow}>
+      <Skeleton.Circle width={44} />
+      <View style={styles.skeletonText}>
+        <Skeleton.Text width={140} height={16} />
+        <Skeleton.Text width={90} height={14} />
+      </View>
+    </View>
+  );
+}
 
 export default function FriendsScreen() {
   const { friends, pending, loading, searchUsers, sendRequest, acceptRequest, declineRequest, refresh } = useFriends();
@@ -102,20 +122,29 @@ export default function FriendsScreen() {
                 Friends ({friends.length})
               </Text>
               {loading ? (
-                <ActivityIndicator color={colors.accent} style={styles.loader} />
+                <View style={styles.skeletonList}>
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <FriendRowSkeleton key={i} />
+                  ))}
+                </View>
               ) : friends.length === 0 ? (
-                <Text style={styles.emptyText}>
-                  Search for friends by username to get started
-                </Text>
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="people-outline" size={48} color={colors.gray[600]} />
+                  <Text style={styles.emptyTitle}>No friends yet</Text>
+                  <Text style={styles.emptyText}>
+                    Search for friends by username to get started
+                  </Text>
+                </View>
               ) : (
-                friends.map((f) => (
-                  <FriendRow
-                    key={f.id}
-                    user={f.friend}
-                    onPress={() =>
-                      router.push({ pathname: '/friend/[id]', params: { id: f.friend.id } })
-                    }
-                  />
+                friends.map((f, index) => (
+                  <StaggeredFriendRow key={f.id} index={index}>
+                    <FriendRow
+                      user={f.friend}
+                      onPress={() =>
+                        router.push({ pathname: '/friend/[id]', params: { id: f.friend.id } })
+                      }
+                    />
+                  </StaggeredFriendRow>
                 ))
               )}
             </View>
@@ -131,7 +160,7 @@ export default function FriendsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   header: {
     fontSize: fontSize.xxl,
@@ -152,14 +181,33 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: spacing.xxl,
+    gap: spacing.sm,
+  },
+  emptyTitle: {
+    color: colors.white,
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+  },
   emptyText: {
     color: colors.gray[500],
     fontSize: fontSize.md,
     textAlign: 'center',
-    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
-  loader: {
-    paddingVertical: spacing.xl,
+  skeletonList: {
+    gap: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  skeletonRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  skeletonText: {
+    gap: spacing.xs,
   },
   addButton: {
     backgroundColor: colors.accent,
@@ -188,7 +236,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
   declineButton: {
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,

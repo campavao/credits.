@@ -1,13 +1,19 @@
 import { View, Text, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { router } from 'expo-router';
 import { useAuth } from '../../providers/AuthProvider';
 import { useStats } from '../../hooks/useStats';
-import { StatCard } from '../../components/StatCard';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
+import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
+import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
+import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
+import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
+import { Skeleton } from '../../components/ui/Skeleton';
+import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 export default function ProfileScreen() {
   const { profile, signOut } = useAuth();
   const { stats, loading } = useStats();
+  const { titles, loading: titlesLoading } = useRecentlyWatched();
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -18,7 +24,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>
@@ -33,30 +39,75 @@ export default function ProfileScreen() {
           )}
         </View>
 
-        <View style={styles.statsGrid}>
-          <StatCard
-            label="Watched"
-            value={stats?.total_watched ?? 0}
-            loading={loading}
-          />
-          <StatCard
-            label="Actors"
-            value={stats?.unique_actors ?? 0}
-            loading={loading}
-          />
-          <StatCard
-            label="Friends"
-            value={stats?.friends_count ?? 0}
-            loading={loading}
-          />
-          <StatCard
-            label="Top Actor"
-            value={stats?.most_completed_actor_name || '-'}
-            subtitle={stats?.most_completed_pct ? `${stats.most_completed_pct}%` : undefined}
-            loading={loading}
-          />
-        </View>
+        {/* Stats cards */}
+        {loading ? (
+          <View style={styles.statsRow}>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton.Rect key={i} width={100} height={80} borderRadius={borderRadius.lg} />
+            ))}
+          </View>
+        ) : (
+          <View style={styles.statsRow}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats?.total_watched ?? 0}</Text>
+              <Text style={styles.statLabel}>Watched</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats?.unique_actors ?? 0}</Text>
+              <Text style={styles.statLabel}>Actors</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>{stats?.friends_count ?? 0}</Text>
+              <Text style={styles.statLabel}>Friends</Text>
+            </View>
+          </View>
+        )}
 
+        {/* Top actor highlight */}
+        {stats?.most_completed_actor_name && (
+          <View style={styles.actorHighlight}>
+            <Text style={styles.highlightLabel}>Most Completed Actor</Text>
+            <HeroCard
+              imageUrl={null}
+              name={stats.most_completed_actor_name}
+              subtitle={stats.most_completed_pct ? `${stats.most_completed_pct}% complete` : undefined}
+              height={200}
+              onPress={
+                stats.most_completed_actor_id
+                  ? () =>
+                      router.push({
+                        pathname: '/actor/[id]',
+                        params: { id: stats.most_completed_actor_id! },
+                      })
+                  : undefined
+              }
+            />
+          </View>
+        )}
+
+        {/* Recently Watched */}
+        <HorizontalScrollRow
+          title="Recently Watched"
+          data={titles}
+          loading={titlesLoading}
+          keyExtractor={(t) => String(t.title_id)}
+          renderItem={(title) => (
+            <PosterCard
+              id={title.title_id}
+              title={title.title}
+              posterPath={title.poster_path}
+              onPress={() =>
+                router.push({
+                  pathname: '/title/[id]',
+                  params: { id: title.title_id, mediaType: title.media_type },
+                })
+              }
+            />
+          )}
+          renderSkeleton={() => <PosterCardSkeleton />}
+        />
+
+        {/* Sign Out */}
         <Pressable style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
         </Pressable>
@@ -72,7 +123,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.black,
+    backgroundColor: surface.base,
   },
   scroll: {
     padding: spacing.md,
@@ -83,9 +134,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.full,
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
@@ -106,11 +157,42 @@ const styles = StyleSheet.create({
     fontSize: fontSize.md,
     marginTop: spacing.xs,
   },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'center',
     gap: spacing.md,
+    marginTop: spacing.md,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: surface.raised,
+    padding: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  statValue: {
+    color: colors.white,
+    fontSize: fontSize.xxl,
+    fontWeight: fontWeight.bold,
+  },
+  statLabel: {
+    color: colors.gray[400],
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.medium,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  actorHighlight: {
     marginTop: spacing.lg,
+    gap: spacing.sm,
+  },
+  highlightLabel: {
+    color: colors.gray[400],
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   signOutButton: {
     marginTop: spacing.xxl,

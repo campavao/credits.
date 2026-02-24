@@ -2,7 +2,7 @@ import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { getPosterUrl } from '../lib/tmdb';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 
 interface TitleCardProps {
   id: number;
@@ -56,13 +56,12 @@ const styles = StyleSheet.create({
     width: 80,
     height: 120,
     borderRadius: borderRadius.sm,
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
   },
   placeholder: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  placeholderText: {},
   info: {
     flex: 1,
     justifyContent: 'center',
@@ -83,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
   },
   badge: {
-    backgroundColor: colors.gray[800],
+    backgroundColor: surface.overlay,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.sm,

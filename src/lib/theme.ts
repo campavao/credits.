@@ -1,5 +1,5 @@
 export const colors = {
-  black: '#000000',
+  black: '#09090B', // zinc-950 off-black
   white: '#FFFFFF',
   accent: '#6366F1', // indigo
   accentLight: '#818CF8',
@@ -19,6 +19,20 @@ export const colors = {
   success: '#22C55E',
   error: '#EF4444',
   warning: '#F59E0B',
+  gold: '#F59E0B',
+} as const;
+
+export const surface = {
+  base: '#09090B',
+  raised: '#18181B',
+  overlay: '#27272A',
+  border: '#3F3F46',
+} as const;
+
+export const springs = {
+  default: { damping: 20, stiffness: 100 },
+  snappy: { damping: 15, stiffness: 200 },
+  gentle: { damping: 25, stiffness: 80 },
 } as const;
 
 export const spacing = {
@@ -46,6 +60,7 @@ export const fontSize = {
   xl: 22,
   xxl: 28,
   display: 34,
+  hero: 42,
 } as const;
 
 export const fontWeight = {

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface, springs } from '../lib/theme';
 
 interface ComparisonBarProps {
   label: string;
@@ -8,6 +10,22 @@ interface ComparisonBarProps {
   total: number;
   labelA?: string;
   labelB?: string;
+}
+
+function AnimatedBar({ pct, color }: { pct: number; color: string }) {
+  const width = useSharedValue(0);
+
+  useEffect(() => {
+    width.value = withSpring(pct, springs.default);
+  }, [pct]);
+
+  const fillStyle = useAnimatedStyle(() => ({
+    width: `${width.value}%` as any,
+  }));
+
+  return (
+    <Animated.View style={[styles.barFill, { backgroundColor: color }, fillStyle]} />
+  );
 }
 
 export function ComparisonBar({
@@ -28,16 +46,16 @@ export function ComparisonBar({
         <View style={styles.barRow}>
           <Text style={styles.barLabel}>{labelA}</Text>
           <View style={styles.barTrack}>
-            <View style={[styles.barFillA, { width: `${pctA}%` }]} />
+            <AnimatedBar pct={pctA} color={colors.accent} />
           </View>
-          <Text style={styles.barValue}>{valueA}/{total}</Text>
+          <Text style={styles.barValue}>{Math.round(pctA)}%</Text>
         </View>
         <View style={styles.barRow}>
           <Text style={styles.barLabel}>{labelB}</Text>
           <View style={styles.barTrack}>
-            <View style={[styles.barFillB, { width: `${pctB}%` }]} />
+            <AnimatedBar pct={pctB} color={colors.accentLight} />
           </View>
-          <Text style={styles.barValue}>{valueB}/{total}</Text>
+          <Text style={styles.barValue}>{Math.round(pctB)}%</Text>
         </View>
       </View>
     </View>
@@ -69,25 +87,19 @@ const styles = StyleSheet.create({
   },
   barTrack: {
     flex: 1,
-    height: 8,
-    backgroundColor: colors.gray[800],
+    height: 12,
+    backgroundColor: surface.raised,
     borderRadius: borderRadius.full,
     overflow: 'hidden',
   },
-  barFillA: {
+  barFill: {
     height: '100%',
-    backgroundColor: colors.accent,
-    borderRadius: borderRadius.full,
-  },
-  barFillB: {
-    height: '100%',
-    backgroundColor: colors.accentLight,
     borderRadius: borderRadius.full,
   },
   barValue: {
     color: colors.gray[400],
     fontSize: fontSize.xs,
-    width: 45,
+    width: 40,
     textAlign: 'right',
   },
 });
