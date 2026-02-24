@@ -31,8 +31,23 @@ function SwipeButton({ onPress }: { onPress: () => void }) {
 export default function ActorDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const actorId = Number(id);
-  const { details, filmography, loading } = useActor(actorId);
+  const { details, filmography, loading, error } = useActor(actorId);
   const { isSeen } = useSeenTitles();
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={colors.gray[500]} />
+          <Text style={styles.errorText}>Couldn't load this actor</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (loading || !details) {
     return (
@@ -227,5 +242,15 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  errorText: {
+    color: colors.gray[400],
+    fontSize: fontSize.md,
   },
 });

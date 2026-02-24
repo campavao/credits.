@@ -69,28 +69,32 @@ export function useFriends() {
 
   const sendRequest = async (addresseeId: string) => {
     if (!user) return;
-    await supabase.from('friendships').insert({
+    const { error } = await supabase.from('friendships').insert({
       requester_id: user.id,
       addressee_id: addresseeId,
     });
+    if (error) throw error;
     await fetchFriends();
   };
 
   const acceptRequest = async (friendshipId: string) => {
-    await supabase
+    const { error } = await supabase
       .from('friendships')
       .update({ status: 'accepted' })
       .eq('id', friendshipId);
+    if (error) throw error;
     await fetchFriends();
   };
 
   const declineRequest = async (friendshipId: string) => {
-    await supabase.from('friendships').delete().eq('id', friendshipId);
+    const { error } = await supabase.from('friendships').delete().eq('id', friendshipId);
+    if (error) throw error;
     await fetchFriends();
   };
 
   const removeFriend = async (friendshipId: string) => {
-    await supabase.from('friendships').delete().eq('id', friendshipId);
+    const { error } = await supabase.from('friendships').delete().eq('id', friendshipId);
+    if (error) throw error;
     await fetchFriends();
   };
 

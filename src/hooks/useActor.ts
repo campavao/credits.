@@ -6,12 +6,14 @@ export function useActor(id: number) {
   const [details, setDetails] = useState<TMDBPersonDetails | null>(null);
   const [filmography, setFilmography] = useState<TMDBPersonCreditEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
+      setError(false);
       try {
         const [person, credits] = await Promise.all([
           getPersonDetails(id),
@@ -33,7 +35,7 @@ export function useActor(id: number) {
 
         setFilmography(filtered);
       } catch {
-        // TODO: error state
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -43,5 +45,5 @@ export function useActor(id: number) {
     return () => { cancelled = true; };
   }, [id]);
 
-  return { details, filmography, loading };
+  return { details, filmography, loading, error };
 }

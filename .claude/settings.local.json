@@ -37,7 +37,9 @@
       "Bash(gh repo:*)",
       "Bash(curl -s https://api.github.com/repos/PeonPing/peon-ping/contents/skills 2>/dev/null | python3 -c \"import sys,json; [print\\(f['name'], f['type']\\) for f in json.loads\\(sys.stdin.read\\(\\)\\)]\" 2>/dev/null)",
       "Bash(curl -s https://api.github.com/repos/PeonPing/peon-ping/contents/install.sh 2>/dev/null | python3 -c \"import sys,json; print\\(json.loads\\(sys.stdin.read\\(\\)\\).get\\('download_url',''\\)\\)\" 2>/dev/null)",
-      "Bash(echo $CLAUDE_SESSION_ID:*)"
+      "Bash(echo $CLAUDE_SESSION_ID:*)",
+      "Bash(echo No outdated packages or npm outdated not available:*)",
+      "Bash(grep:*)"
     ]
   }
 }

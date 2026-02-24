@@ -179,6 +179,19 @@ export default function ProfileScreen() {
           renderSkeleton={() => <PosterCardSkeleton />}
         />
 
+        {/* Legal */}
+        <View style={styles.legalSection}>
+          <Text style={styles.legalHeader}>Legal</Text>
+          <Pressable style={styles.legalRow} onPress={() => router.push('/privacy-policy')}>
+            <Text style={styles.legalRowText}>Privacy Policy</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.gray[500]} />
+          </Pressable>
+          <Pressable style={styles.legalRow} onPress={() => router.push('/terms-of-service')}>
+            <Text style={styles.legalRowText}>Terms of Service</Text>
+            <Ionicons name="chevron-forward" size={18} color={colors.gray[500]} />
+          </Pressable>
+        </View>
+
         {/* Sign Out */}
         <Pressable style={styles.signOutButton} onPress={handleSignOut}>
           <Text style={styles.signOutText}>Sign Out</Text>
@@ -314,6 +327,29 @@ const styles = StyleSheet.create({
     color: colors.error,
     fontSize: fontSize.md,
     fontWeight: fontWeight.semibold,
+  },
+  legalSection: {
+    marginTop: spacing.xxl,
+  },
+  legalHeader: {
+    color: colors.gray[400],
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: spacing.sm,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: surface.border,
+  },
+  legalRowText: {
+    color: colors.gray[300],
+    fontSize: fontSize.md,
   },
   attribution: {
     color: colors.gray[600],

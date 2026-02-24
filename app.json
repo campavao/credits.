@@ -15,7 +15,13 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.credits.app"
+      "bundleIdentifier": "com.credits.app",
+      "buildNumber": "1",
+      "privacyUrl": "credits://privacy-policy",
+      "infoPlist": {
+        "NSContactsUsageDescription": "credits. uses your contacts to help you find friends who are already on the app.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {

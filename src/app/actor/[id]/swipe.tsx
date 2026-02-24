@@ -12,7 +12,7 @@ import type { TMDBPersonCreditEntry } from '../../../types/tmdb';
 export default function ActorSwipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const actorId = Number(id);
-  const { details, filmography, loading } = useActor(actorId);
+  const { details, filmography, loading, error } = useActor(actorId);
   const { seenIds, loading: seenLoading, markAsSeen } = useSeenTitles();
 
   // Pre-filter here in the parent where both are guaranteed loaded
@@ -20,6 +20,23 @@ export default function ActorSwipeScreen() {
     () => filmography.filter((f) => !seenIds.has(f.id)),
     [filmography, seenLoading] // recompute when seenLoading flips false, then stable
   );
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <View style={styles.header}>
+          <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={20} color={colors.accent} />
+            <Text style={styles.backText}>Back</Text>
+          </Pressable>
+        </View>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={colors.gray[500]} />
+          <Text style={styles.errorText}>Couldn't load filmography</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // Wait for BOTH actor data and seen titles to load before showing deck
   if (loading || seenLoading || !details) {
@@ -101,5 +118,15 @@ const styles = StyleSheet.create({
   },
   spacer: {
     width: 60,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  errorText: {
+    color: colors.gray[400],
+    fontSize: fontSize.md,
   },
 });

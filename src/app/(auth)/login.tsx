@@ -139,6 +139,17 @@ export default function LoginScreen() {
             </>
           )}
         </View>
+
+        <Text style={styles.legalText}>
+          By continuing, you agree to our{' '}
+          <Text style={styles.legalLink} onPress={() => router.push('/terms-of-service')}>
+            Terms of Service
+          </Text>{' '}
+          and{' '}
+          <Text style={styles.legalLink} onPress={() => router.push('/privacy-policy')}>
+            Privacy Policy
+          </Text>
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
@@ -219,5 +230,16 @@ const styles = StyleSheet.create({
     color: colors.gray[400],
     fontSize: fontSize.sm,
     textAlign: 'center',
+  },
+  legalText: {
+    color: colors.gray[500],
+    fontSize: fontSize.xs,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    lineHeight: 18,
+  },
+  legalLink: {
+    color: colors.gray[400],
+    textDecorationLine: 'underline',
   },
 });

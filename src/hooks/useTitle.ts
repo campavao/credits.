@@ -9,12 +9,14 @@ export function useTitle(id: number, mediaType: 'movie' | 'tv') {
   const [details, setDetails] = useState<TitleDetails | null>(null);
   const [cast, setCast] = useState<TMDBCastMember[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       setLoading(true);
+      setError(false);
       try {
         const [detailsData, creditsData] = await Promise.all([
           mediaType === 'movie' ? getMovieDetails(id) : getTVDetails(id),
@@ -25,7 +27,7 @@ export function useTitle(id: number, mediaType: 'movie' | 'tv') {
         setDetails({ ...detailsData, mediaType });
         setCast(creditsData.cast.slice(0, MAX_CAST_DEPTH));
       } catch {
-        // TODO: error state
+        if (!cancelled) setError(true);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -35,5 +37,5 @@ export function useTitle(id: number, mediaType: 'movie' | 'tv') {
     return () => { cancelled = true; };
   }, [id, mediaType]);
 
-  return { details, cast, loading };
+  return { details, cast, loading, error };
 }

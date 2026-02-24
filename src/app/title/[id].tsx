@@ -13,8 +13,23 @@ import type { TMDBMovieDetails, TMDBTVDetails } from '../../types/tmdb';
 export default function TitleDetailScreen() {
   const { id, mediaType } = useLocalSearchParams<{ id: string; mediaType: 'movie' | 'tv' }>();
   const titleId = Number(id);
-  const { details, cast, loading } = useTitle(titleId, mediaType as 'movie' | 'tv');
+  const { details, cast, loading, error } = useTitle(titleId, mediaType as 'movie' | 'tv');
   const { isSeen, markAsSeen, markAsUnseen } = useSeenTitles();
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="chevron-back" size={20} color={colors.accent} />
+          <Text style={styles.backText}>Back</Text>
+        </Pressable>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color={colors.gray[500]} />
+          <Text style={styles.errorText}>Couldn't load this title</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (loading || !details) {
     return (
@@ -200,5 +215,15 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingBottom: spacing.xxl,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: spacing.md,
+  },
+  errorText: {
+    color: colors.gray[400],
+    fontSize: fontSize.md,
   },
 });
