@@ -1,6 +1,7 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useStats } from '../../hooks/useStats';
@@ -30,9 +31,17 @@ function AnimatedNumber({ value, label }: { value: number; label: string }) {
 }
 
 export default function HomeScreen() {
-  const { stats, loading: statsLoading } = useStats();
-  const { actors, loading: actorsLoading } = useTrackedActors();
-  const { titles, loading: titlesLoading } = useRecentlyWatched();
+  const { stats, loading: statsLoading, refresh: refreshStats } = useStats();
+  const { actors, loading: actorsLoading, refresh: refreshActors } = useTrackedActors();
+  const { titles, loading: titlesLoading, refresh: refreshTitles } = useRecentlyWatched();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshStats();
+      refreshActors();
+      refreshTitles();
+    }, [])
+  );
 
   const topActorProfileUrl = stats?.most_completed_actor_id
     ? null // We don't have the profile_path in stats — use tracked actors

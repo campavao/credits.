@@ -11,6 +11,7 @@ export interface Database {
           username: string | null;
           display_name: string | null;
           avatar_url: string | null;
+          avatar_actor_ids: number[];
           created_at: string;
           updated_at: string;
         };
@@ -21,6 +22,7 @@ export interface Database {
           username?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
+          avatar_actor_ids?: number[];
           created_at?: string;
           updated_at?: string;
         };
@@ -31,6 +33,7 @@ export interface Database {
           username?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
+          avatar_actor_ids?: number[];
           updated_at?: string;
         };
         Relationships: [];

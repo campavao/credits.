@@ -1,21 +1,34 @@
-import { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TextInput, Image, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../providers/AuthProvider';
 import { useStats } from '../../hooks/useStats';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
+import { useTrackedActors } from '../../hooks/useTrackedActors';
+import { getProfileUrl } from '../../lib/tmdb';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
 import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
 import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
+const AVATAR_SIZE = 88;
+
 export default function ProfileScreen() {
   const { profile, signOut, updateDisplayName } = useAuth();
-  const { stats, loading } = useStats();
-  const { titles, loading: titlesLoading } = useRecentlyWatched();
+  const { stats, loading, refresh: refreshStats } = useStats();
+  const { titles, loading: titlesLoading, refresh: refreshTitles } = useRecentlyWatched();
+  const { actors: topActors, refresh: refreshActors } = useTrackedActors();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshStats();
+      refreshActors();
+      refreshTitles();
+    }, [])
+  );
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');
 
@@ -46,11 +59,27 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
         <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {(profile?.display_name || profile?.username || '?')[0].toUpperCase()}
-            </Text>
-          </View>
+          <Pressable onPress={() => router.push('/profile-picture')}>
+            {(() => {
+              const savedId = profile?.avatar_actor_ids?.[0];
+              const actor = savedId ? topActors.find((a) => a.id === savedId) : null;
+              const imageUrl = actor?.profile_path ? getProfileUrl(actor.profile_path, 'small') : null;
+
+              if (imageUrl) {
+                return <Image source={{ uri: imageUrl }} style={styles.avatar} />;
+              }
+              return (
+                <View style={[styles.avatar, styles.avatarFallback]}>
+                  <Text style={styles.avatarText}>
+                    {(profile?.display_name || profile?.username || '?')[0].toUpperCase()}
+                  </Text>
+                </View>
+              );
+            })()}
+            <View style={styles.avatarEditBadge}>
+              <Ionicons name="camera" size={14} color={colors.white} />
+            </View>
+          </Pressable>
           {editing ? (
             <View style={styles.editRow}>
               <TextInput
@@ -180,18 +209,34 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xl,
   },
   avatar: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: AVATAR_SIZE,
+    height: AVATAR_SIZE,
+    borderRadius: AVATAR_SIZE / 2,
+    overflow: 'hidden',
+    marginBottom: spacing.md,
+  },
+  avatarFallback: {
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: spacing.md,
   },
   avatarText: {
     color: colors.white,
     fontSize: fontSize.display,
     fontWeight: fontWeight.bold,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: spacing.md,
+    right: -2,
+    backgroundColor: colors.accent,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: surface.base,
   },
   nameRow: {
     flexDirection: 'row',

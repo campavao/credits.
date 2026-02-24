@@ -15,6 +15,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateDisplayName: (name: string) => Promise<{ error: Error | null }>;
+  updateAvatarActors: (actorIds: number[]) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -94,6 +95,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error as Error | null };
   };
 
+  const updateAvatarActors = async (actorIds: number[]) => {
+    if (!session?.user) return { error: new Error('Not authenticated') };
+    const { error } = await supabase
+      .from('users')
+      .update({ avatar_actor_ids: actorIds, updated_at: new Date().toISOString() })
+      .eq('id', session.user.id);
+    if (!error) await fetchProfile(session.user.id);
+    return { error: error as Error | null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -108,6 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signOut,
         refreshProfile,
         updateDisplayName,
+        updateAvatarActors,
       }}
     >
       {children}
