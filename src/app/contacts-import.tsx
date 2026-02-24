@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import * as SMS from 'expo-sms';
 import { useContactImport } from '../hooks/useContactImport';
 import { useFriends } from '../hooks/useFriends';
 import { FriendRow } from '../components/FriendRow';
+import { SearchBar } from '../components/ui/SearchBar';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import type { User } from '../types/database';
 
@@ -27,6 +28,27 @@ export default function ContactsImportScreen() {
   const { permissionStatus, loading, matched, unmatched, ran, requestAndImport } = useContactImport();
   const { sendRequest } = useFriends();
   const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
+
+  const filteredMatched = useMemo(() => {
+    if (!search) return matched;
+    const q = search.toLowerCase();
+    return matched.filter(
+      (u) =>
+        u.display_name?.toLowerCase().includes(q) ||
+        u.username?.toLowerCase().includes(q),
+    );
+  }, [matched, search]);
+
+  const filteredUnmatched = useMemo(() => {
+    if (!search) return unmatched;
+    const q = search.toLowerCase();
+    return unmatched.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.phone.includes(q),
+    );
+  }, [unmatched, search]);
 
   const handleAdd = async (userId: string) => {
     await sendRequest(userId);
@@ -43,13 +65,13 @@ export default function ContactsImportScreen() {
   };
 
   const sections: { title: string; data: SectionItem[] }[] = [];
-  if (matched.length > 0) {
-    sections.push({ title: 'On credits.', data: matched.map((u): SectionItem => ({ type: 'matched', user: u })) });
+  if (filteredMatched.length > 0) {
+    sections.push({ title: 'On credits.', data: filteredMatched.map((u): SectionItem => ({ type: 'matched', user: u })) });
   }
-  if (unmatched.length > 0) {
+  if (filteredUnmatched.length > 0) {
     sections.push({
       title: 'Invite',
-      data: unmatched.map((c): SectionItem => ({ type: 'unmatched', name: c.name, phone: c.phone })),
+      data: filteredUnmatched.map((c): SectionItem => ({ type: 'unmatched', name: c.name, phone: c.phone })),
     });
   }
 
@@ -98,13 +120,27 @@ export default function ContactsImportScreen() {
         </View>
       )}
 
-      {ran && !loading && sections.length === 0 && (
+      {ran && !loading && matched.length === 0 && unmatched.length === 0 && (
         <View style={styles.ctaContainer}>
           <Ionicons name="search-outline" size={64} color={colors.gray[500]} />
           <Text style={styles.ctaTitle}>No matches found</Text>
           <Text style={styles.ctaDescription}>
             None of your contacts are on credits. yet. Invite them!
           </Text>
+        </View>
+      )}
+
+      {ran && !loading && (matched.length > 0 || unmatched.length > 0) && (
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder="Search contacts..."
+        />
+      )}
+
+      {ran && !loading && search.length > 0 && sections.length === 0 && (
+        <View style={styles.emptySearch}>
+          <Text style={styles.ctaDescription}>No contacts matching "{search}"</Text>
         </View>
       )}
 
@@ -210,6 +246,11 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: spacing.xxl,
+  },
+  emptySearch: {
+    alignItems: 'center',
+    paddingTop: spacing.xl,
+    paddingHorizontal: spacing.xl,
   },
   sectionTitle: {
     fontSize: fontSize.sm,
