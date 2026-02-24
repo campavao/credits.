@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 import { useStats } from '../../hooks/useStats';
 import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
+import { useFriendsActivity } from '../../hooks/useFriendsActivity';
 import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
 import { ActorPortraitCard, ActorPortraitCardSkeleton } from '../../components/ActorPortraitCard';
@@ -34,13 +35,20 @@ export default function HomeScreen() {
   const { stats, loading: statsLoading, refresh: refreshStats } = useStats();
   const { actors, loading: actorsLoading, refresh: refreshActors } = useTrackedActors();
   const { titles, loading: titlesLoading, refresh: refreshTitles } = useRecentlyWatched();
+  const { activity, loading: activityLoading, refresh: refreshActivity } = useFriendsActivity();
 
   useFocusEffect(
     useCallback(() => {
       refreshStats();
       refreshActors();
       refreshTitles();
+      refreshActivity();
     }, [])
+  );
+
+  // De-duplicate friend activity by title_id (show each title once)
+  const uniqueActivity = activity.filter(
+    (item, index, arr) => arr.findIndex((a) => a.title_id === item.title_id) === index
   );
 
   const topActorProfileUrl = stats?.most_completed_actor_id
@@ -106,6 +114,35 @@ export default function HomeScreen() {
               )}
               renderSkeleton={() => <PosterCardSkeleton />}
             />
+
+            {/* Friends Are Watching */}
+            {uniqueActivity.length > 0 && (
+              <HorizontalScrollRow
+                title="Friends Are Watching"
+                data={uniqueActivity}
+                loading={activityLoading}
+                keyExtractor={(a) => `${a.title_id}`}
+                renderItem={(item) => (
+                  <View>
+                    <PosterCard
+                      id={item.title_id}
+                      title={item.title_name}
+                      posterPath={item.poster_path}
+                      onPress={() =>
+                        router.push({
+                          pathname: '/title/[id]',
+                          params: { id: item.title_id, mediaType: item.media_type },
+                        })
+                      }
+                    />
+                    <Text style={styles.friendActivityName} numberOfLines={1}>
+                      {item.friend_name}
+                    </Text>
+                  </View>
+                )}
+                renderSkeleton={() => <PosterCardSkeleton />}
+              />
+            )}
 
             {/* Top Actor Hero */}
             {topActor && (
@@ -208,5 +245,11 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  friendActivityName: {
+    color: colors.gray[400],
+    fontSize: fontSize.xs,
+    marginTop: 2,
+    textAlign: 'center',
   },
 });

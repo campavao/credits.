@@ -33,7 +33,11 @@
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase migration repair --status reverted 00005 2>&1)",
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase functions deploy fetch-credits 2>&1)",
       "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase sql --query \"UPDATE titles SET credits_fetched_at = NULL WHERE media_type = 'tv';\" 2>&1)",
-      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase db execute --query \"UPDATE titles SET credits_fetched_at = NULL WHERE media_type = 'tv';\" 2>&1)"
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase db execute --query \"UPDATE titles SET credits_fetched_at = NULL WHERE media_type = 'tv';\" 2>&1)",
+      "Bash(gh repo:*)",
+      "Bash(curl -s https://api.github.com/repos/PeonPing/peon-ping/contents/skills 2>/dev/null | python3 -c \"import sys,json; [print\\(f['name'], f['type']\\) for f in json.loads\\(sys.stdin.read\\(\\)\\)]\" 2>/dev/null)",
+      "Bash(curl -s https://api.github.com/repos/PeonPing/peon-ping/contents/install.sh 2>/dev/null | python3 -c \"import sys,json; print\\(json.loads\\(sys.stdin.read\\(\\)\\).get\\('download_url',''\\)\\)\" 2>/dev/null)",
+      "Bash(echo $CLAUDE_SESSION_ID:*)"
     ]
   }
 }

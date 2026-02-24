@@ -12,6 +12,7 @@ interface SharedTitle {
 export function useSharedTitles(friendId: string) {
   const { user } = useAuth();
   const [titles, setTitles] = useState<SharedTitle[]>([]);
+  const [friendOnlyTitles, setFriendOnlyTitles] = useState<SharedTitle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,35 +34,60 @@ export function useSharedTitles(friendId: string) {
 
       if (!myData || !friendData) {
         setTitles([]);
+        setFriendOnlyTitles([]);
         setLoading(false);
         return;
       }
 
+      const myTitleIds = new Set(myData.map((d) => d.title_id));
       const friendTitleIds = new Set(friendData.map((d) => d.title_id));
-      const sharedIds = myData
-        .filter((d) => friendTitleIds.has(d.title_id))
+
+      const sharedIds = friendData
+        .filter((d) => myTitleIds.has(d.title_id))
         .map((d) => d.title_id);
 
-      if (sharedIds.length === 0) {
+      const friendOnlyIds = friendData
+        .filter((d) => !myTitleIds.has(d.title_id))
+        .map((d) => d.title_id);
+
+      // Fetch title details for both sets in parallel
+      const allIds = [...new Set([...sharedIds, ...friendOnlyIds])].slice(0, 100);
+
+      if (allIds.length === 0) {
         setTitles([]);
+        setFriendOnlyTitles([]);
         setLoading(false);
         return;
       }
 
-      // Fetch title details
       const { data: titleData } = await supabase
         .from('titles')
         .select('id, title, poster_path, media_type')
-        .in('id', sharedIds.slice(0, 50));
+        .in('id', allIds);
 
       if (titleData) {
+        const titleMap = new Map(titleData.map((t) => [t.id, t]));
+
+        const sharedSet = new Set(sharedIds);
+        const friendOnlySet = new Set(friendOnlyIds);
+
+        const toSharedTitle = (t: typeof titleData[0]): SharedTitle => ({
+          title_id: t.id,
+          title: t.title,
+          poster_path: t.poster_path,
+          media_type: t.media_type as 'movie' | 'tv',
+        });
+
         setTitles(
-          titleData.map((t) => ({
-            title_id: t.id,
-            title: t.title,
-            poster_path: t.poster_path,
-            media_type: t.media_type as 'movie' | 'tv',
-          }))
+          sharedIds
+            .filter((id) => titleMap.has(id))
+            .map((id) => toSharedTitle(titleMap.get(id)!))
+        );
+        setFriendOnlyTitles(
+          friendOnlyIds
+            .filter((id) => titleMap.has(id))
+            .slice(0, 20)
+            .map((id) => toSharedTitle(titleMap.get(id)!))
         );
       }
       setLoading(false);
@@ -70,5 +96,5 @@ export function useSharedTitles(friendId: string) {
     load();
   }, [user, friendId]);
 
-  return { titles, loading };
+  return { titles, friendOnlyTitles, loading };
 }

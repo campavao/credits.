@@ -14,6 +14,22 @@ interface ActorComparison {
   user_b_seen: number;
 }
 
+interface ComparisonStats {
+  user_a_count: number;
+  user_b_count: number;
+  shared_count: number;
+  overlap_pct: number;
+}
+
+interface SharedActorComparison {
+  actor_id: number;
+  actor_name: string;
+  profile_path: string | null;
+  user_a_seen: number;
+  user_b_seen: number;
+  total_titles: number;
+}
+
 export function useComparison() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -75,5 +91,25 @@ export function useComparison() {
     return appearances || [];
   };
 
-  return { getOverlapScore, getActorComparison, getSharedActors, loading };
+  const getComparisonStats = async (friendId: string): Promise<ComparisonStats | null> => {
+    if (!user) return null;
+    const { data, error } = await supabase.rpc('get_friend_comparison_stats', {
+      user_a: user.id,
+      user_b: friendId,
+    });
+    if (error || !data) return null;
+    return data[0] || null;
+  };
+
+  const getSharedActorsComparison = async (friendId: string): Promise<SharedActorComparison[]> => {
+    if (!user) return [];
+    const { data, error } = await supabase.rpc('get_shared_actors_with_comparison', {
+      user_a: user.id,
+      user_b: friendId,
+    });
+    if (error || !data) return [];
+    return data;
+  };
+
+  return { getOverlapScore, getActorComparison, getSharedActors, getComparisonStats, getSharedActorsComparison, loading };
 }

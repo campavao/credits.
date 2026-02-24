@@ -258,6 +258,39 @@ export interface Database {
           phone: string | null;
         }[];
       };
+      get_friend_comparison_stats: {
+        Args: { user_a: string; user_b: string };
+        Returns: {
+          user_a_count: number;
+          user_b_count: number;
+          shared_count: number;
+          overlap_pct: number;
+        }[];
+      };
+      get_shared_actors_with_comparison: {
+        Args: { user_a: string; user_b: string; lim?: number };
+        Returns: {
+          actor_id: number;
+          actor_name: string;
+          profile_path: string | null;
+          user_a_seen: number;
+          user_b_seen: number;
+          total_titles: number;
+        }[];
+      };
+      get_friends_recent_activity: {
+        Args: { user_id_input: string; lim?: number };
+        Returns: {
+          friend_id: string;
+          friend_name: string;
+          friend_username: string | null;
+          title_id: number;
+          title_name: string;
+          poster_path: string | null;
+          media_type: string;
+          watched_at: string;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;
