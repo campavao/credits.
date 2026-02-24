@@ -244,6 +244,16 @@ export interface Database {
           friends_count: number;
         }[];
       };
+      find_users_by_phone: {
+        Args: { phone_numbers: string[] };
+        Returns: {
+          id: string;
+          display_name: string | null;
+          username: string | null;
+          avatar_url: string | null;
+          phone: string | null;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;

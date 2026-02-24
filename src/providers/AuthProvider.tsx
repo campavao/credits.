@@ -14,6 +14,7 @@ interface AuthContextType {
   signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  updateDisplayName: (name: string) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,9 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
-      if (session?.user) fetchProfile(session.user.id);
+      if (session?.user) await fetchProfile(session.user.id);
       setLoading(false);
     });
 
@@ -83,6 +84,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (session?.user) await fetchProfile(session.user.id);
   };
 
+  const updateDisplayName = async (name: string) => {
+    if (!session?.user) return { error: new Error('Not authenticated') };
+    const { error } = await supabase
+      .from('users')
+      .update({ display_name: name, updated_at: new Date().toISOString() })
+      .eq('id', session.user.id);
+    if (!error) await fetchProfile(session.user.id);
+    return { error: error as Error | null };
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -96,6 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithPassword,
         signOut,
         refreshProfile,
+        updateDisplayName,
       }}
     >
       {children}

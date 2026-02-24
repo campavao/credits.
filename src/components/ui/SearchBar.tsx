@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: fontSize.md,
     paddingVertical: 12,
+    letterSpacing: 0,
   },
   clearButton: {
     marginLeft: spacing.sm,

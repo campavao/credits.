@@ -56,6 +56,12 @@ export default function FriendsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Text style={styles.header}>Friends</Text>
+
+      <Pressable style={styles.contactsButton} onPress={() => router.push('/contacts-import')}>
+        <Ionicons name="people-circle-outline" size={20} color={colors.accent} />
+        <Text style={styles.contactsButtonText}>Find from contacts</Text>
+      </Pressable>
+
       <SearchBar
         value={searchQuery}
         onChangeText={handleSearch}
@@ -244,5 +250,23 @@ const styles = StyleSheet.create({
   declineText: {
     color: colors.gray[400],
     fontSize: fontSize.sm,
+  },
+  contactsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    gap: spacing.sm,
+    marginHorizontal: spacing.md,
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  contactsButtonText: {
+    color: colors.accent,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
 });

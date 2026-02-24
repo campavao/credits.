@@ -4,7 +4,7 @@ import { useAuth } from '../providers/AuthProvider';
 import { colors, surface } from '../lib/theme';
 
 export default function Index() {
-  const { session, loading } = useAuth();
+  const { session, profile, loading } = useAuth();
 
   if (loading) {
     return (
@@ -16,6 +16,10 @@ export default function Index() {
 
   if (!session) {
     return <Redirect href="/(auth)/login" />;
+  }
+
+  if (profile && !profile.display_name) {
+    return <Redirect href="/(auth)/onboarding" />;
   }
 
   return <Redirect href="/(tabs)/home" />;

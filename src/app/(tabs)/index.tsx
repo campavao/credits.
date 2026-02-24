@@ -1,6 +1,8 @@
-import { View, Text, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../providers/AuthProvider';
 import { useStats } from '../../hooks/useStats';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
@@ -11,9 +13,27 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 export default function ProfileScreen() {
-  const { profile, signOut } = useAuth();
+  const { profile, signOut, updateDisplayName } = useAuth();
   const { stats, loading } = useStats();
   const { titles, loading: titlesLoading } = useRecentlyWatched();
+  const [editing, setEditing] = useState(false);
+  const [nameInput, setNameInput] = useState('');
+
+  const startEditing = () => {
+    setNameInput(profile?.display_name || '');
+    setEditing(true);
+  };
+
+  const saveDisplayName = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed) return;
+    const { error } = await updateDisplayName(trimmed);
+    if (error) {
+      Alert.alert('Error', error.message);
+    } else {
+      setEditing(false);
+    }
+  };
 
   const handleSignOut = () => {
     Alert.alert('Sign Out', 'Are you sure?', [
@@ -31,9 +51,35 @@ export default function ProfileScreen() {
               {(profile?.display_name || profile?.username || '?')[0].toUpperCase()}
             </Text>
           </View>
-          <Text style={styles.name}>
-            {profile?.display_name || profile?.username || 'User'}
-          </Text>
+          {editing ? (
+            <View style={styles.editRow}>
+              <TextInput
+                style={styles.editInput}
+                value={nameInput}
+                onChangeText={setNameInput}
+                autoFocus
+                maxLength={50}
+                autoCapitalize="words"
+                returnKeyType="done"
+                onSubmitEditing={saveDisplayName}
+              />
+              <Pressable onPress={saveDisplayName} hitSlop={8}>
+                <Ionicons name="checkmark" size={22} color={colors.success} />
+              </Pressable>
+              <Pressable onPress={() => setEditing(false)} hitSlop={8}>
+                <Ionicons name="close" size={22} color={colors.gray[400]} />
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>
+                {profile?.display_name || profile?.username || 'User'}
+              </Text>
+              <Pressable onPress={startEditing} hitSlop={8}>
+                <Ionicons name="pencil" size={16} color={colors.gray[400]} />
+              </Pressable>
+            </View>
+          )}
           {profile?.username && (
             <Text style={styles.username}>@{profile.username}</Text>
           )}
@@ -147,10 +193,30 @@ const styles = StyleSheet.create({
     fontSize: fontSize.display,
     fontWeight: fontWeight.bold,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
   name: {
     color: colors.white,
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
+  },
+  editRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  editInput: {
+    color: colors.white,
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.accent,
+    paddingVertical: spacing.xs,
+    minWidth: 120,
+    textAlign: 'center',
   },
   username: {
     color: colors.gray[400],

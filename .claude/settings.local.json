@@ -27,7 +27,8 @@
       "Bash(npm view:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(echo EXIT: $?:*)"
     ]
   }
 }
