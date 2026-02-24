@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,9 +13,16 @@ export default function ActorSwipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const actorId = Number(id);
   const { details, filmography, loading } = useActor(actorId);
-  const { seenIds, markAsSeen } = useSeenTitles();
+  const { seenIds, loading: seenLoading, markAsSeen } = useSeenTitles();
 
-  if (loading || !details) {
+  // Pre-filter here in the parent where both are guaranteed loaded
+  const unseenFilmography = useMemo(
+    () => filmography.filter((f) => !seenIds.has(f.id)),
+    [filmography, seenLoading] // recompute when seenLoading flips false, then stable
+  );
+
+  // Wait for BOTH actor data and seen titles to load before showing deck
+  if (loading || seenLoading || !details) {
     return (
       <SafeAreaView style={styles.container}>
         <ActivityIndicator size="large" color={colors.accent} style={styles.loader} />
@@ -51,6 +59,7 @@ export default function ActorSwipeScreen() {
 
       <SwipeDeck
         filmography={filmography}
+        unseenFilmography={unseenFilmography}
         seenIds={seenIds}
         onSwipeRight={handleSwipeRight}
         onSwipeLeft={handleSwipeLeft}

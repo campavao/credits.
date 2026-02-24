@@ -1,5 +1,5 @@
 import { View, Text, Image, StyleSheet, Dimensions } from 'react-native';
-import Animated, { SharedValue, interpolate, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { SharedValue, interpolate, useAnimatedStyle, Extrapolation } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { getPosterUrl } from '../lib/tmdb';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
@@ -34,7 +34,15 @@ export function SwipeCard({
   const animatedStyle = useAnimatedStyle(() => {
     if (isTop) {
       const rotate = interpolate(translateX.value, [-SCREEN_WIDTH, 0, SCREEN_WIDTH], [-15, 0, 15]);
+      // Fade to 0 as card exits so it's invisible before unmount — prevents flash
+      const opacity = interpolate(
+        Math.abs(translateX.value),
+        [0, SCREEN_WIDTH * 0.8, SCREEN_WIDTH * 1.2],
+        [1, 1, 0],
+        Extrapolation.CLAMP
+      );
       return {
+        opacity,
         transform: [
           { translateX: translateX.value },
           { rotate: `${rotate}deg` },

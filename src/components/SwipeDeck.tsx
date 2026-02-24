@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { View, Text, Dimensions, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -19,6 +19,7 @@ const SWIPE_VELOCITY = 500;
 
 interface SwipeDeckProps {
   filmography: TMDBPersonCreditEntry[];
+  unseenFilmography: TMDBPersonCreditEntry[];
   seenIds: Set<number>;
   onSwipeRight: (item: TMDBPersonCreditEntry) => void;
   onSwipeLeft: (item: TMDBPersonCreditEntry) => void;
@@ -27,21 +28,35 @@ interface SwipeDeckProps {
 
 export function SwipeDeck({
   filmography,
+  unseenFilmography: unseenProp,
   seenIds,
   onSwipeRight,
   onSwipeLeft,
   actorName,
 }: SwipeDeckProps) {
+  // Freeze the unseen list at mount so swiping doesn't re-order the deck
+  const [deck] = useState(() => unseenProp);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateX = useSharedValue(0);
 
-  const seenCount = filmography.filter((f) => seenIds.has(f.id)).length;
+  const alreadySeenCount = filmography.length - deck.length;
   const total = filmography.length;
-  const done = currentIndex >= total;
+  const done = currentIndex >= deck.length;
 
-  const handleSwipeComplete = useCallback(
+  // Reset translateX AFTER React re-renders and removes the old card
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    translateX.value = 0;
+  }, [currentIndex]);
+
+  const advanceCard = useCallback(
     (direction: 'left' | 'right') => {
-      const item = filmography[currentIndex];
+      const item = deck[currentIndex];
       if (!item) return;
 
       if (direction === 'right') {
@@ -53,7 +68,7 @@ export function SwipeDeck({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setCurrentIndex((prev) => prev + 1);
     },
-    [currentIndex, filmography, onSwipeRight, onSwipeLeft]
+    [currentIndex, deck, onSwipeRight, onSwipeLeft]
   );
 
   const panGesture = Gesture.Pan()
@@ -72,8 +87,7 @@ export function SwipeDeck({
           direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5,
           { duration: 300 },
           () => {
-            runOnJS(handleSwipeComplete)(direction);
-            translateX.value = 0;
+            runOnJS(advanceCard)(direction);
           }
         );
       } else {
@@ -82,6 +96,7 @@ export function SwipeDeck({
     });
 
   if (done) {
+    const seenCount = filmography.filter((f) => seenIds.has(f.id)).length;
     const finalPct = total > 0 ? Math.round((seenCount / total) * 100) : 0;
     return (
       <View style={styles.doneContainer}>
@@ -97,7 +112,7 @@ export function SwipeDeck({
   }
 
   // Render up to 3 cards (current + 2 behind)
-  const visibleCards = filmography
+  const visibleCards = deck
     .slice(currentIndex, currentIndex + 3)
     .reverse();
 
@@ -105,7 +120,8 @@ export function SwipeDeck({
     <View style={styles.container}>
       <View style={styles.counter}>
         <Text style={styles.counterText}>
-          {currentIndex + 1} / {total}
+          {currentIndex + 1} / {deck.length}
+          {alreadySeenCount > 0 ? `  (${alreadySeenCount} already seen)` : ''}
         </Text>
       </View>
 
