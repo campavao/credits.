@@ -28,7 +28,12 @@
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npx kill-port:*)",
-      "Bash(echo EXIT: $?:*)"
+      "Bash(echo EXIT: $?:*)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase migration repair 00005_fix_user_stats --status reverted 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase migration repair --status reverted 00005 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase functions deploy fetch-credits 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase sql --query \"UPDATE titles SET credits_fetched_at = NULL WHERE media_type = 'tv';\" 2>&1)",
+      "Bash(cd /c/Users/cam95/Documents/Github/credits && npx supabase db execute --query \"UPDATE titles SET credits_fetched_at = NULL WHERE media_type = 'tv';\" 2>&1)"
     ]
   }
 }

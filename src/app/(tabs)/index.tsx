@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../providers/AuthProvider';
 import { useStats } from '../../hooks/useStats';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
-import { useTrackedActors } from '../../hooks/useTrackedActors';
+import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
 import { getProfileUrl } from '../../lib/tmdb';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
 import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
@@ -139,22 +139,19 @@ export default function ProfileScreen() {
         )}
 
         {/* Top actor highlight */}
-        {stats?.most_completed_actor_name && (
+        {topActors.length > 0 && (
           <View style={styles.actorHighlight}>
-            <Text style={styles.highlightLabel}>Most Completed Actor</Text>
+            <Text style={styles.highlightLabel}>Most Watched Actor</Text>
             <HeroCard
-              imageUrl={null}
-              name={stats.most_completed_actor_name}
-              subtitle={stats.most_completed_pct ? `${stats.most_completed_pct}% complete` : undefined}
+              imageUrl={getProfileUrl(topActors[0].profile_path, 'original')}
+              name={topActors[0].name}
+              subtitle={formatSeenSubtitle(topActors[0])}
               height={200}
-              onPress={
-                stats.most_completed_actor_id
-                  ? () =>
-                      router.push({
-                        pathname: '/actor/[id]',
-                        params: { id: stats.most_completed_actor_id! },
-                      })
-                  : undefined
+              onPress={() =>
+                router.push({
+                  pathname: '/actor/[id]',
+                  params: { id: topActors[0].id },
+                })
               }
             />
           </View>

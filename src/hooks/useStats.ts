@@ -7,6 +7,7 @@ interface UserStats {
   unique_actors: number;
   most_completed_actor_id: number | null;
   most_completed_actor_name: string | null;
+  most_completed_actor_profile_path: string | null;
   most_completed_pct: number;
   friends_count: number;
 }

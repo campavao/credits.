@@ -7,6 +7,15 @@ interface TrackedActor {
   name: string;
   profile_path: string | null;
   seen_count: number;
+  movie_count: number;
+  tv_count: number;
+}
+
+export function formatSeenSubtitle(actor: TrackedActor): string {
+  const parts: string[] = [];
+  if (actor.movie_count > 0) parts.push(`${actor.movie_count} film${actor.movie_count !== 1 ? 's' : ''}`);
+  if (actor.tv_count > 0) parts.push(`${actor.tv_count} show${actor.tv_count !== 1 ? 's' : ''}`);
+  return parts.length > 0 ? `${parts.join(', ')} seen` : `${actor.seen_count} seen`;
 }
 
 export function useTrackedActors() {
@@ -32,10 +41,10 @@ export function useTrackedActors() {
 
     const titleIds = seenData.map((s) => s.title_id);
 
-    // Get appearances for those titles with actor info
+    // Get appearances for those titles with actor info and media type
     const { data: appearances } = await supabase
       .from('appearances')
-      .select('actor_id, actors(id, name, profile_path)')
+      .select('actor_id, title_id, actors(id, name, profile_path), titles(media_type)')
       .in('title_id', titleIds.slice(0, 200));
 
     if (!appearances) {
@@ -44,20 +53,26 @@ export function useTrackedActors() {
       return;
     }
 
-    // Group by actor and count
+    // Group by actor and count movies vs TV
     const actorMap = new Map<number, TrackedActor>();
     for (const a of appearances) {
       const actor = (a as any).actors;
+      const title = (a as any).titles;
       if (!actor) continue;
+      const isMovie = title?.media_type === 'movie';
       const existing = actorMap.get(actor.id);
       if (existing) {
         existing.seen_count++;
+        if (isMovie) existing.movie_count++;
+        else existing.tv_count++;
       } else {
         actorMap.set(actor.id, {
           id: actor.id,
           name: actor.name,
           profile_path: actor.profile_path,
           seen_count: 1,
+          movie_count: isMovie ? 1 : 0,
+          tv_count: isMovie ? 0 : 1,
         });
       }
     }

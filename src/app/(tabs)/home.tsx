@@ -5,7 +5,7 @@ import { useFocusEffect } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useStats } from '../../hooks/useStats';
-import { useTrackedActors } from '../../hooks/useTrackedActors';
+import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
 import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
@@ -78,7 +78,7 @@ export default function HomeScreen() {
                   id={actor.id}
                   name={actor.name}
                   profilePath={actor.profile_path}
-                  subtitle={`${actor.seen_count} seen`}
+                  subtitle={formatSeenSubtitle(actor)}
                   onPress={() => router.push({ pathname: '/actor/[id]', params: { id: actor.id } })}
                 />
               )}
@@ -117,7 +117,7 @@ export default function HomeScreen() {
                   <HeroCard
                     imageUrl={topActorImageUrl}
                     name={topActor.name}
-                    subtitle={`${topActor.seen_count} films seen`}
+                    subtitle={formatSeenSubtitle(topActor)}
                     height={280}
                     onPress={() =>
                       router.push({ pathname: '/actor/[id]', params: { id: topActor.id } })

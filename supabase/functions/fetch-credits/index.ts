@@ -49,8 +49,9 @@ Deno.serve(async (req) => {
       return new Response('Credits already fetched', { status: 200 });
     }
 
-    // Fetch credits from TMDB
-    const creditsUrl = `${TMDB_BASE}/${title.media_type}/${titleId}/credits?api_key=${tmdbApiKey}`;
+    // Fetch credits from TMDB (use aggregate_credits for TV to get full cast)
+    const creditsEndpoint = title.media_type === 'tv' ? 'aggregate_credits' : 'credits';
+    const creditsUrl = `${TMDB_BASE}/${title.media_type}/${titleId}/${creditsEndpoint}?api_key=${tmdbApiKey}`;
     const creditsRes = await fetch(creditsUrl);
 
     if (!creditsRes.ok) {
@@ -58,7 +59,16 @@ Deno.serve(async (req) => {
     }
 
     const credits = await creditsRes.json();
-    const topCast = credits.cast.slice(0, MAX_CAST);
+    // aggregate_credits nests roles differently — normalize to same shape
+    const rawCast = credits.cast.slice(0, MAX_CAST);
+    const topCast = title.media_type === 'tv'
+      ? rawCast.map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          profile_path: c.profile_path,
+          character: c.roles?.[0]?.character || null,
+        }))
+      : rawCast;
 
     if (topCast.length === 0) {
       // Mark as fetched even if no cast

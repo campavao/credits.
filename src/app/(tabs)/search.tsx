@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { View, Text, FlatList, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useSearch } from '../../hooks/useSearch';
 import { useActorSearch } from '../../hooks/useActorSearch';
 import { useTrending } from '../../hooks/useTrending';
-import { useStats } from '../../hooks/useStats';
+import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
 import { SearchBar } from '../../components/ui/SearchBar';
 import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
@@ -21,7 +21,14 @@ export default function SearchTabScreen() {
   const { query, setQuery, results: titleResults, loading: titleLoading } = useSearch();
   const { query: actorQuery, setQuery: setActorQuery, results: actorResults, loading: actorLoading } = useActorSearch();
   const { results: trending, loading: trendingLoading } = useTrending();
-  const { stats } = useStats();
+  const { actors: trackedActors, refresh: refreshActors } = useTrackedActors();
+  const topActor = trackedActors.length > 0 ? trackedActors[0] : null;
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshActors();
+    }, [])
+  );
 
   const isSearching = query.trim().length > 0;
 
@@ -100,22 +107,19 @@ export default function SearchTabScreen() {
         />
       ) : (
         <ScrollView contentContainerStyle={styles.defaultContent} showsVerticalScrollIndicator={false}>
-          {/* Featured actor hero — user's top actor or first trending */}
-          {stats?.most_completed_actor_name ? (
+          {/* Featured actor hero — user's top actor */}
+          {topActor ? (
             <View style={styles.heroSection}>
               <HeroCard
-                imageUrl={null}
-                name={stats.most_completed_actor_name}
-                subtitle={stats.most_completed_pct ? `${stats.most_completed_pct}% complete` : undefined}
+                imageUrl={getProfileUrl(topActor.profile_path, 'original')}
+                name={topActor.name}
+                subtitle={formatSeenSubtitle(topActor)}
                 height={240}
-                onPress={
-                  stats.most_completed_actor_id
-                    ? () =>
-                        router.push({
-                          pathname: '/actor/[id]',
-                          params: { id: stats.most_completed_actor_id! },
-                        })
-                    : undefined
+                onPress={() =>
+                  router.push({
+                    pathname: '/actor/[id]',
+                    params: { id: topActor.id },
+                  })
                 }
                 style={{ marginHorizontal: spacing.md }}
               />
