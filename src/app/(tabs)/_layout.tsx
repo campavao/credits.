@@ -7,9 +7,9 @@ import { colors, fontSize, spacing } from '../../lib/theme';
 
 // Floating-bar geometry. Screens add `TAB_BAR_CLEARANCE` of bottom padding to
 // their scroll content so nothing hides behind the floating glass pill.
-const BAR_HEIGHT = 64;
+const BAR_HEIGHT = 74;
 const SIDE_MARGIN = spacing.md;
-export const TAB_BAR_CLEARANCE = 110;
+export const TAB_BAR_CLEARANCE = 120;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -36,7 +36,13 @@ export default function TabLayout() {
           shadowRadius: 20,
         },
         tabBarItemStyle: {
-          paddingVertical: 8,
+          paddingTop: 12,
+          paddingBottom: 10,
+        },
+        tabBarLabelStyle: {
+          fontSize: fontSize.xs,
+          fontWeight: '500',
+          marginTop: 2,
         },
         tabBarBackground: () => (
           <BlurView
@@ -47,10 +53,6 @@ export default function TabLayout() {
         ),
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.gray[400],
-        tabBarLabelStyle: {
-          fontSize: fontSize.xs,
-          fontWeight: '500',
-        },
       }}
     >
       <Tabs.Screen

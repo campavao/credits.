@@ -142,7 +142,7 @@ export default function FriendsScreen() {
                   <Ionicons name="people-outline" size={48} color={colors.gray[600]} />
                   <Text style={styles.emptyTitle}>No friends yet</Text>
                   <Text style={styles.emptyText}>
-                    Search for friends by username to get started
+                    Search for a friend by name to add them
                   </Text>
                 </View>
               ) : (
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   listContent: {
-    paddingBottom: 110, // clear the floating tab bar
+    paddingBottom: 120, // clear the floating tab bar
   },
   section: {
     marginTop: spacing.md,

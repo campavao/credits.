@@ -58,10 +58,14 @@ export function useFriends() {
   }, [fetchFriends]);
 
   const searchUsers = async (query: string) => {
+    // Match on display name OR username — most users only have a display_name,
+    // so searching username alone returned nothing. Strip PostgREST meta chars.
+    const safe = query.replace(/[%,()]/g, ' ').trim();
+    if (!safe) return [];
     const { data } = await supabase
       .from('users')
       .select('*')
-      .ilike('username', `%${query}%`)
+      .or(`display_name.ilike.%${safe}%,username.ilike.%${safe}%`)
       .neq('id', user?.id || '')
       .limit(20);
     return data || [];
