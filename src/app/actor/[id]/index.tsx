@@ -1,5 +1,6 @@
-import { View, Text, Pressable, Dimensions, StyleSheet } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useState, useCallback } from 'react';
+import { View, Text, Pressable, ActivityIndicator, Dimensions, StyleSheet } from 'react-native';
+import { useLocalSearchParams, useFocusEffect, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,10 +20,32 @@ const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 function SwipeButton({ onPress }: { onPress: () => void }) {
   const { animatedStyle, onPressIn, onPressOut } = useSpringPressable();
+  const [navigating, setNavigating] = useState(false);
+
+  // Reset the spinner whenever this screen is focused again (e.g. after the
+  // user swipes back from the deck), so the button is ready for next time.
+  useFocusEffect(useCallback(() => setNavigating(false), []));
+
+  const handlePress = () => {
+    setNavigating(true); // immediate feedback so the tap visibly registers
+    onPress();
+  };
+
   return (
     <Animated.View style={animatedStyle}>
-      <Pressable style={styles.swipeButton} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
-        <Text style={styles.swipeButtonText}>Start Swiping</Text>
+      <Pressable
+        style={styles.swipeButton}
+        onPress={handlePress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={navigating}
+        hitSlop={8}
+      >
+        {navigating ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <Text style={styles.swipeButtonText}>Start Swiping</Text>
+        )}
       </Pressable>
     </Animated.View>
   );

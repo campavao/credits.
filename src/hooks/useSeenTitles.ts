@@ -1,12 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../providers/AuthProvider';
-import type { TMDBSearchResult } from '../types/tmdb';
+
+// Module-level cache (per user) so screens that mount useSeenTitles — e.g. the
+// actor detail screen then the swipe screen — don't each block on a fresh
+// network fetch. The detail screen warms it, so swipe loads instantly.
+const seenCache = new Map<string, Set<number>>();
 
 export function useSeenTitles() {
   const { user } = useAuth();
-  const [seenIds, setSeenIds] = useState<Set<number>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const cached = user ? seenCache.get(user.id) : undefined;
+  const [seenIds, setSeenIds] = useState<Set<number>>(cached ?? new Set());
+  // Only show the blocking loading state when we have nothing cached yet.
+  const [loading, setLoading] = useState(!cached);
 
   const fetchSeen = useCallback(async () => {
     if (!user) return;
@@ -14,11 +20,19 @@ export function useSeenTitles() {
       .from('seen_titles')
       .select('title_id')
       .eq('user_id', user.id);
-    setSeenIds(new Set(data?.map((d) => d.title_id) || []));
+    const set = new Set(data?.map((d) => d.title_id) || []);
+    seenCache.set(user.id, set);
+    setSeenIds(set);
     setLoading(false);
   }, [user]);
 
   useEffect(() => {
+    // If we have a cached set, render from it immediately and refresh quietly.
+    const hit = user ? seenCache.get(user.id) : undefined;
+    if (hit) {
+      setSeenIds(hit);
+      setLoading(false);
+    }
     fetchSeen();
   }, [fetchSeen]);
 
@@ -47,7 +61,11 @@ export function useSeenTitles() {
     });
 
     if (!error) {
-      setSeenIds((prev) => new Set(prev).add(titleId));
+      setSeenIds((prev) => {
+        const next = new Set(prev).add(titleId);
+        seenCache.set(user.id, next);
+        return next;
+      });
     }
   };
 
@@ -63,6 +81,7 @@ export function useSeenTitles() {
       setSeenIds((prev) => {
         const next = new Set(prev);
         next.delete(titleId);
+        seenCache.set(user.id, next);
         return next;
       });
     }
