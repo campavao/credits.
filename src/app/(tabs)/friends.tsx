@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.sm,
   },
   listContent: {
-    paddingBottom: 120, // clear the floating tab bar
+    paddingBottom: 112, // clear the floating tab bar
   },
   section: {
     marginTop: spacing.md,

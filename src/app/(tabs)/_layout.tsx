@@ -7,9 +7,9 @@ import { colors, fontSize, spacing } from '../../lib/theme';
 
 // Floating-bar geometry. Screens add `TAB_BAR_CLEARANCE` of bottom padding to
 // their scroll content so nothing hides behind the floating glass pill.
-const BAR_HEIGHT = 74;
+const BAR_HEIGHT = 66;
 const SIDE_MARGIN = spacing.md;
-export const TAB_BAR_CLEARANCE = 120;
+export const TAB_BAR_CLEARANCE = 112;
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -36,13 +36,13 @@ export default function TabLayout() {
           shadowRadius: 20,
         },
         tabBarItemStyle: {
-          paddingTop: 12,
-          paddingBottom: 10,
+          paddingTop: 8,
+          paddingBottom: 6,
         },
         tabBarLabelStyle: {
           fontSize: fontSize.xs,
           fontWeight: '500',
-          marginTop: 2,
+          marginTop: 1,
         },
         tabBarBackground: () => (
           <BlurView
@@ -60,7 +60,7 @@ export default function TabLayout() {
         options={{
           title: 'Home',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -69,7 +69,7 @@ export default function TabLayout() {
         options={{
           title: 'Search',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -96,7 +96,7 @@ export default function TabLayout() {
         options={{
           title: 'Friends',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -105,7 +105,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={24} color={color} />
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
           ),
         }}
       />
@@ -123,13 +123,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(18,18,22,0.45)',
   },
   addButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 10,
     shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,

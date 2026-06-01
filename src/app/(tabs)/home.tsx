@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     backgroundColor: surface.base,
   },
   scroll: {
-    paddingBottom: 120, // clear the floating tab bar
+    paddingBottom: 112, // clear the floating tab bar
   },
   logo: {
     fontSize: fontSize.display,
