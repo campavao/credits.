@@ -5,6 +5,7 @@ import {
   FlatList,
   Pressable,
   StyleSheet,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -57,15 +58,18 @@ export default function FriendsScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Text style={styles.header}>Friends</Text>
 
-      <Pressable style={styles.contactsButton} onPress={() => router.push('/contacts-import')}>
-        <Ionicons name="people-circle-outline" size={20} color={colors.accent} />
-        <Text style={styles.contactsButtonText}>Find from contacts</Text>
-      </Pressable>
+      {/* Contacts API isn't available in the browser — native only */}
+      {Platform.OS !== 'web' && (
+        <Pressable style={styles.contactsButton} onPress={() => router.push('/contacts-import')}>
+          <Ionicons name="people-circle-outline" size={20} color={colors.accent} />
+          <Text style={styles.contactsButtonText}>Find from contacts</Text>
+        </Pressable>
+      )}
 
       <SearchBar
         value={searchQuery}
         onChangeText={handleSearch}
-        placeholder="Find friends by username..."
+        placeholder="Find friends by name..."
       />
 
       <FlatList

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '../../providers/AuthProvider';
+import { PosterWall } from '../../components/PosterWall';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
 const isWeb = Platform.OS === 'web';
@@ -134,6 +135,7 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+      <PosterWall />
       <View style={styles.content}>
         <Text style={styles.logo}>creditz.</Text>
         <Text style={styles.tagline}>track actors, not just movies</Text>

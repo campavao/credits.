@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Dimensions, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Dimensions, StyleSheet } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import Animated, {
+import {
   useSharedValue,
   withSpring,
   withTiming,
@@ -10,9 +10,12 @@ import Animated, {
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeCard, CARD_WIDTH, CARD_HEIGHT } from './SwipeCard';
+import { useShake } from '../hooks/useShake';
 import { SWIPE_THRESHOLD } from '../lib/constants';
-import { colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
+import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 import type { TMDBPersonCreditEntry } from '../types/tmdb';
+
+type SwipeDirection = 'left' | 'right';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SWIPE_VELOCITY = 500;
@@ -23,6 +26,7 @@ interface SwipeDeckProps {
   seenIds: Set<number>;
   onSwipeRight: (item: TMDBPersonCreditEntry) => void;
   onSwipeLeft: (item: TMDBPersonCreditEntry) => void;
+  onUndo?: (item: TMDBPersonCreditEntry, direction: SwipeDirection) => void;
   actorName: string;
 }
 
@@ -32,6 +36,7 @@ export function SwipeDeck({
   seenIds,
   onSwipeRight,
   onSwipeLeft,
+  onUndo,
   actorName,
 }: SwipeDeckProps) {
   // Freeze the unseen list at mount so swiping doesn't re-order the deck
@@ -39,6 +44,8 @@ export function SwipeDeck({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateX = useSharedValue(0);
+  // Records each swipe so it can be reversed (shake or Undo button)
+  const historyRef = useRef<SwipeDirection[]>([]);
 
   const alreadySeenCount = filmography.length - deck.length;
   const total = filmography.length;
@@ -65,11 +72,29 @@ export function SwipeDeck({
         onSwipeLeft(item);
       }
 
+      historyRef.current.push(direction);
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setCurrentIndex((prev) => prev + 1);
     },
     [currentIndex, deck, onSwipeRight, onSwipeLeft]
   );
+
+  // Reverse the most recent swipe — re-shows the previous card and undoes its
+  // effect (e.g. un-marks a "seen" title). Triggered by a shake or the button.
+  const undoLast = useCallback(() => {
+    const direction = historyRef.current.pop();
+    if (!direction) return;
+    const item = deck[currentIndex - 1];
+    if (!item) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+    onUndo?.(item, direction);
+  }, [currentIndex, deck, onUndo]);
+
+  // Shake to undo (native only — see useShake).
+  useShake(undoLast);
+
+  const canUndo = currentIndex > 0;
 
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
@@ -107,6 +132,13 @@ export function SwipeDeck({
         </Text>
         <Text style={styles.donePct}>{finalPct}%</Text>
         <Text style={styles.doneSubtext}>of {actorName}'s filmography</Text>
+
+        {canUndo && (
+          <Pressable style={styles.doneUndoButton} onPress={undoLast} hitSlop={10}>
+            <Ionicons name="arrow-undo" size={16} color={colors.gray[300]} />
+            <Text style={styles.undoText}>Bring back last</Text>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -155,6 +187,17 @@ export function SwipeDeck({
           <Ionicons name="chevron-back" size={16} color={colors.error} />
           <Text style={styles.hintLeft}>Skip</Text>
         </View>
+
+        <Pressable
+          style={[styles.undoButton, !canUndo && styles.undoButtonDisabled]}
+          onPress={undoLast}
+          disabled={!canUndo}
+          hitSlop={10}
+        >
+          <Ionicons name="arrow-undo" size={16} color={colors.gray[300]} />
+          <Text style={styles.undoText}>Undo</Text>
+        </Pressable>
+
         <View style={styles.hintRow}>
           <Text style={styles.hintRight}>Seen</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.success} />
@@ -194,6 +237,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     opacity: 0.6,
+  },
+  undoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: surface.raised,
+    borderWidth: 1,
+    borderColor: surface.border,
+  },
+  undoButtonDisabled: {
+    opacity: 0,
+  },
+  undoText: {
+    color: colors.gray[300],
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+  },
+  doneUndoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: surface.raised,
+    borderWidth: 1,
+    borderColor: surface.border,
   },
   hintLeft: {
     color: colors.error,

@@ -96,7 +96,7 @@ export function SwipeCard({
   return (
     <Animated.View style={[styles.card, animatedStyle]}>
       {posterUrl ? (
-        <Image source={{ uri: posterUrl }} style={styles.poster} />
+        <Image source={{ uri: posterUrl }} style={styles.poster} resizeMode="contain" />
       ) : (
         <View style={[styles.poster, styles.posterPlaceholder]}>
           <Ionicons name="film-outline" size={64} color={colors.gray[500]} />

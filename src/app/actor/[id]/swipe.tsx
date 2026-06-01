@@ -13,7 +13,7 @@ export default function ActorSwipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const actorId = Number(id);
   const { details, filmography, loading, error } = useActor(actorId);
-  const { seenIds, loading: seenLoading, markAsSeen } = useSeenTitles();
+  const { seenIds, loading: seenLoading, markAsSeen, markAsUnseen } = useSeenTitles();
 
   // Pre-filter here in the parent where both are guaranteed loaded
   const unseenFilmography = useMemo(
@@ -63,6 +63,13 @@ export default function ActorSwipeScreen() {
     // Skip -- do nothing
   };
 
+  const handleUndo = (item: TMDBPersonCreditEntry, direction: 'left' | 'right') => {
+    // Reverse a "seen" mark; skips had no effect to undo.
+    if (direction === 'right') {
+      markAsUnseen(item.id);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
@@ -80,6 +87,7 @@ export default function ActorSwipeScreen() {
         seenIds={seenIds}
         onSwipeRight={handleSwipeRight}
         onSwipeLeft={handleSwipeLeft}
+        onUndo={handleUndo}
         actorName={details.name}
       />
     </SafeAreaView>
