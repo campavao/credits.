@@ -162,6 +162,7 @@ export default function FriendsScreen() {
         }
         refreshing={loading}
         onRefresh={refresh}
+        contentContainerStyle={styles.listContent}
       />
     </SafeAreaView>
   );
@@ -178,6 +179,9 @@ const styles = StyleSheet.create({
     color: colors.white,
     paddingHorizontal: spacing.md,
     paddingTop: spacing.sm,
+  },
+  listContent: {
+    paddingBottom: 110, // clear the floating tab bar
   },
   section: {
     marginTop: spacing.md,

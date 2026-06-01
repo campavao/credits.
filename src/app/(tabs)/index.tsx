@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
   },
   scroll: {
     padding: spacing.md,
-    paddingBottom: spacing.xxl,
+    paddingBottom: 110, // clear the floating tab bar
   },
   profileHeader: {
     alignItems: 'center',

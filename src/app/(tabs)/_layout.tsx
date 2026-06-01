@@ -1,22 +1,52 @@
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { Tabs, router } from 'expo-router';
+import { BlurView } from 'expo-blur';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { colors, fontSize, surface } from '../../lib/theme';
+import { colors, fontSize, spacing } from '../../lib/theme';
+
+// Floating-bar geometry. Screens add `TAB_BAR_CLEARANCE` of bottom padding to
+// their scroll content so nothing hides behind the floating glass pill.
+const BAR_HEIGHT = 64;
+const SIDE_MARGIN = spacing.md;
+export const TAB_BAR_CLEARANCE = 110;
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const bottom = (insets.bottom || spacing.md) + 4;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: surface.base,
-          borderTopColor: surface.border,
-          borderTopWidth: 0.5,
-          height: 85,
-          paddingTop: 8,
+          position: 'absolute',
+          left: SIDE_MARGIN,
+          right: SIDE_MARGIN,
+          bottom,
+          height: BAR_HEIGHT,
+          borderRadius: BAR_HEIGHT / 2,
+          borderTopWidth: 0,
+          backgroundColor: 'transparent',
+          elevation: 0,
+          // Floating drop shadow
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.45,
+          shadowRadius: 20,
         },
+        tabBarItemStyle: {
+          paddingVertical: 8,
+        },
+        tabBarBackground: () => (
+          <BlurView
+            intensity={Platform.OS === 'web' ? 30 : 60}
+            tint="dark"
+            style={styles.glass}
+          />
+        ),
         tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.gray[500],
+        tabBarInactiveTintColor: colors.gray[400],
         tabBarLabelStyle: {
           fontSize: fontSize.xs,
           fontWeight: '500',
@@ -53,7 +83,7 @@ export default function TabLayout() {
           title: '',
           tabBarIcon: () => (
             <View style={styles.addButton}>
-              <Ionicons name="add" size={32} color={colors.white} />
+              <Ionicons name="add" size={30} color={colors.white} />
             </View>
           ),
           tabBarLabel: () => null,
@@ -82,17 +112,25 @@ export default function TabLayout() {
 }
 
 const styles = StyleSheet.create({
+  glass: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: BAR_HEIGHT / 2,
+    overflow: 'hidden',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: 'rgba(18,18,22,0.45)',
+  },
   addButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 14,
     shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
   },
