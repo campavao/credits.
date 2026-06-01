@@ -1,9 +1,9 @@
-import { View, StyleSheet, Platform } from 'react-native';
-import { Tabs, router } from 'expo-router';
-import { BlurView } from 'expo-blur';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { colors, fontSize, spacing } from '../../lib/theme';
+import { Ionicons } from "@expo/vector-icons";
+import { BlurView } from "expo-blur";
+import { Tabs, router } from "expo-router";
+import { Platform, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, fontSize, spacing } from "../../lib/theme";
 
 // Floating-bar geometry. Screens add `TAB_BAR_CLEARANCE` of bottom padding to
 // their scroll content so nothing hides behind the floating glass pill.
@@ -19,34 +19,35 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarShowLabel: false,
         tabBarStyle: {
-          position: 'absolute',
+          position: "absolute",
           left: SIDE_MARGIN,
           right: SIDE_MARGIN,
           bottom,
           height: BAR_HEIGHT,
           borderRadius: BAR_HEIGHT / 2,
           borderTopWidth: 0,
-          backgroundColor: 'transparent',
+          backgroundColor: "transparent",
           elevation: 0,
           // Floating drop shadow
-          shadowColor: '#000',
+          shadowColor: "#000",
           shadowOffset: { width: 0, height: 10 },
           shadowOpacity: 0.45,
           shadowRadius: 20,
         },
         tabBarItemStyle: {
-          paddingTop: 8,
-          paddingBottom: 6,
+          paddingTop: 2,
+          alignSelf: "center",
         },
         tabBarLabelStyle: {
           fontSize: fontSize.xs,
-          fontWeight: '500',
+          fontWeight: "500",
           marginTop: 1,
         },
         tabBarBackground: () => (
           <BlurView
-            intensity={Platform.OS === 'web' ? 30 : 60}
+            intensity={Platform.OS === "web" ? 30 : 60}
             tint="dark"
             style={styles.glass}
           />
@@ -58,18 +59,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          title: 'Home',
+          // title: "Home",
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
-          title: 'Search',
+          title: "Search",
+          headerShown: false,
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} size={22} color={color} />
+            <Ionicons
+              name={focused ? "search" : "search-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -78,11 +88,11 @@ export default function TabLayout() {
         listeners={{
           tabPress: (e) => {
             e.preventDefault();
-            router.push('/actor-search');
+            router.push("/actor-search");
           },
         }}
         options={{
-          title: '',
+          title: "",
           tabBarIcon: () => (
             <View style={styles.addButton}>
               <Ionicons name="add" size={30} color={colors.white} />
@@ -94,18 +104,26 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          title: 'Friends',
+          // title: "Friends",
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'people' : 'people-outline'} size={22} color={color} />
+            <Ionicons
+              name={focused ? "people" : "people-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Profile',
+          // title: "Profile",
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -117,19 +135,18 @@ const styles = StyleSheet.create({
   glass: {
     ...StyleSheet.absoluteFillObject,
     borderRadius: BAR_HEIGHT / 2,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(255,255,255,0.14)',
-    backgroundColor: 'rgba(18,18,22,0.45)',
+    borderColor: "rgba(255,255,255,0.14)",
+    backgroundColor: "rgba(18,18,22,0.45)",
   },
   addButton: {
     width: 50,
     height: 50,
     borderRadius: 25,
     backgroundColor: colors.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 10,
+    justifyContent: "center",
+    alignItems: "center",
     shadowColor: colors.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
