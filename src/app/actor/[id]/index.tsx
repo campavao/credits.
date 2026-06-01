@@ -12,14 +12,12 @@ import { PosterCard, PosterCardSkeleton } from '../../../components/PosterCard';
 import { StarRating } from '../../../components/StarRating';
 import { GradientStatBar } from '../../../components/GradientStatBar';
 import { Skeleton } from '../../../components/ui/Skeleton';
-import { useSpringPressable } from '../../../lib/animations';
 import { getProfileUrl } from '../../../lib/tmdb';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius, springs } from '../../../lib/theme';
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 function SwipeButton({ onPress }: { onPress: () => void }) {
-  const { animatedStyle, onPressIn, onPressOut } = useSpringPressable();
   const [navigating, setNavigating] = useState(false);
 
   // Reset the spinner whenever this screen is focused again (e.g. after the
@@ -31,23 +29,21 @@ function SwipeButton({ onPress }: { onPress: () => void }) {
     onPress();
   };
 
+  // Opacity-only press feedback (no scale) keeps the tap target stable — a
+  // shrinking button caused iOS Safari to cancel the first onPress.
   return (
-    <Animated.View style={animatedStyle}>
-      <Pressable
-        style={styles.swipeButton}
-        onPress={handlePress}
-        onPressIn={onPressIn}
-        onPressOut={onPressOut}
-        disabled={navigating}
-        hitSlop={8}
-      >
-        {navigating ? (
-          <ActivityIndicator color={colors.white} />
-        ) : (
-          <Text style={styles.swipeButtonText}>Start Swiping</Text>
-        )}
-      </Pressable>
-    </Animated.View>
+    <Pressable
+      style={({ pressed }) => [styles.swipeButton, pressed && styles.swipeButtonPressed]}
+      onPress={handlePress}
+      disabled={navigating}
+      hitSlop={8}
+    >
+      {navigating ? (
+        <ActivityIndicator color={colors.white} />
+      ) : (
+        <Text style={styles.swipeButtonText}>Start Swiping</Text>
+      )}
+    </Pressable>
   );
 }
 
@@ -107,7 +103,11 @@ export default function ActorDetailScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Animated.ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Pressable style={styles.backButton} onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
@@ -260,6 +260,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.full,
     alignItems: 'center',
+  },
+  swipeButtonPressed: {
+    opacity: 0.85,
   },
   swipeButtonText: {
     color: colors.white,
