@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 import { AuthProvider } from '../providers/AuthProvider';
 import { surface } from '../lib/theme';
 
@@ -14,7 +14,9 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: surface.base },
-            animation: 'slide_from_right',
+            // On web the slide animation leaves a transform on the screen
+            // container, offsetting hit-testing so buttons become unclickable.
+            animation: Platform.OS === 'web' ? 'none' : 'slide_from_right',
           }}
         >
           <Stack.Screen name="actor-search" />

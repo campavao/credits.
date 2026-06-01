@@ -96,6 +96,18 @@ export function SwipeDeck({
 
   const canUndo = currentIndex > 0;
 
+  // Tapping Skip/Seen animates the top card off then advances — same result as
+  // a swipe, for people (especially on web) who'd rather tap than drag.
+  const handleButtonSwipe = (direction: SwipeDirection) => {
+    translateX.value = withTiming(
+      direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5,
+      { duration: 300 },
+      (finished) => {
+        if (finished) runOnJS(advanceCard)(direction);
+      }
+    );
+  };
+
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       translateX.value = event.translationX;
@@ -183,10 +195,14 @@ export function SwipeDeck({
       </GestureDetector>
 
       <View style={styles.hints}>
-        <View style={styles.hintRow}>
+        <Pressable
+          style={({ pressed }) => [styles.hintButton, pressed && styles.hintButtonPressed]}
+          onPress={() => handleButtonSwipe('left')}
+          hitSlop={12}
+        >
           <Ionicons name="chevron-back" size={16} color={colors.error} />
           <Text style={styles.hintLeft}>Skip</Text>
-        </View>
+        </Pressable>
 
         <Pressable
           style={[styles.undoButton, !canUndo && styles.undoButtonDisabled]}
@@ -198,10 +214,14 @@ export function SwipeDeck({
           <Text style={styles.undoText}>Undo</Text>
         </Pressable>
 
-        <View style={styles.hintRow}>
+        <Pressable
+          style={({ pressed }) => [styles.hintButton, pressed && styles.hintButtonPressed]}
+          onPress={() => handleButtonSwipe('right')}
+          hitSlop={12}
+        >
           <Text style={styles.hintRight}>Seen</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.success} />
-        </View>
+        </Pressable>
       </View>
     </View>
   );
@@ -237,6 +257,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     opacity: 0.6,
+  },
+  hintButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: surface.raised,
+    borderWidth: 1,
+    borderColor: surface.border,
+  },
+  hintButtonPressed: {
+    opacity: 0.55,
   },
   undoButton: {
     flexDirection: 'row',
