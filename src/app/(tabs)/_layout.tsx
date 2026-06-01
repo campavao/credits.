@@ -7,7 +7,7 @@ import { colors, fontSize, spacing } from "../../lib/theme";
 
 // Floating-bar geometry. Screens add `TAB_BAR_CLEARANCE` of bottom padding to
 // their scroll content so nothing hides behind the floating glass pill.
-const BAR_HEIGHT = 66;
+const BAR_HEIGHT = 44;
 const SIDE_MARGIN = spacing.md;
 export const TAB_BAR_CLEARANCE = 112;
 
@@ -59,7 +59,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="home"
         options={{
-          // title: "Home",
+          title: "Home",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
@@ -73,7 +73,6 @@ export default function TabLayout() {
         name="search"
         options={{
           title: "Search",
-          headerShown: false,
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
@@ -104,7 +103,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="friends"
         options={{
-          // title: "Friends",
+          title: "Friends",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "people" : "people-outline"}
@@ -117,7 +116,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          // title: "Profile",
+          title: "Profile",
           tabBarIcon: ({ focused, color }) => (
             <Ionicons
               name={focused ? "person" : "person-outline"}
