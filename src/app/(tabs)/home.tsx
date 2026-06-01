@@ -64,11 +64,11 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Text style={styles.logo}>credits.</Text>
+        <Text style={styles.logo}>creditz.</Text>
 
         {isEmpty ? (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyTitle}>Welcome to credits.</Text>
+            <Text style={styles.emptyTitle}>Welcome to creditz.</Text>
             <Text style={styles.emptyText}>
               Search for a movie or actor to get started
             </Text>

@@ -61,12 +61,12 @@ export default function ContactsImportScreen() {
       Alert.alert('SMS not available', 'This device cannot send text messages.');
       return;
     }
-    await SMS.sendSMSAsync([phone], "I'm using credits. to track actors and movies — join me! https://credits.app");
+    await SMS.sendSMSAsync([phone], "I'm using creditz. to track actors and movies — join me! https://creditz.vercel.app");
   };
 
   const sections: { title: string; data: SectionItem[] }[] = [];
   if (filteredMatched.length > 0) {
-    sections.push({ title: 'On credits.', data: filteredMatched.map((u): SectionItem => ({ type: 'matched', user: u })) });
+    sections.push({ title: 'On creditz.', data: filteredMatched.map((u): SectionItem => ({ type: 'matched', user: u })) });
   }
   if (filteredUnmatched.length > 0) {
     sections.push({
@@ -92,7 +92,7 @@ export default function ContactsImportScreen() {
           <Ionicons name="people-circle-outline" size={64} color={colors.accent} />
           <Text style={styles.ctaTitle}>Find friends from contacts</Text>
           <Text style={styles.ctaDescription}>
-            See which of your contacts are already on credits. and invite the rest.
+            See which of your contacts are already on creditz. and invite the rest.
           </Text>
           <Pressable style={styles.ctaButton} onPress={requestAndImport}>
             <Text style={styles.ctaButtonText}>Find Friends</Text>
@@ -125,7 +125,7 @@ export default function ContactsImportScreen() {
           <Ionicons name="search-outline" size={64} color={colors.gray[500]} />
           <Text style={styles.ctaTitle}>No matches found</Text>
           <Text style={styles.ctaDescription}>
-            None of your contacts are on credits. yet. Invite them!
+            None of your contacts are on creditz. yet. Invite them!
           </Text>
         </View>
       )}

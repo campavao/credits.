@@ -13,25 +13,26 @@ import { router } from 'expo-router';
 import { useAuth } from '../../providers/AuthProvider';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
-export default function OnboardingScreen() {
-  const [name, setName] = useState('');
+export default function ResetPasswordScreen() {
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { updateDisplayName } = useAuth();
+  const { updatePassword } = useAuth();
 
-  const handleContinue = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) return;
-    setLoading(true);
+  const handleSave = async () => {
     setError(null);
-    const { error } = await updateDisplayName(trimmed);
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await updatePassword(password);
     setLoading(false);
     if (error) {
-      // Alert.alert is unreliable on web, so show the message inline.
       if (Platform.OS === 'web') setError(error.message);
       else Alert.alert('Error', error.message);
     } else {
-      router.replace('/(tabs)/home');
+      router.replace('/');
     }
   };
 
@@ -42,31 +43,31 @@ export default function OnboardingScreen() {
     >
       <View style={styles.content}>
         <Text style={styles.logo}>creditz.</Text>
-        <Text style={styles.title}>What should we call you?</Text>
+        <Text style={styles.title}>Choose a new password</Text>
 
         <View style={styles.form}>
           <TextInput
             style={styles.input}
-            placeholder="Your name"
+            placeholder="New password"
             placeholderTextColor={colors.gray[500]}
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
+            value={password}
+            onChangeText={(t) => { setPassword(t); setError(null); }}
+            secureTextEntry
+            autoCapitalize="none"
             autoFocus
-            maxLength={50}
-            returnKeyType="done"
-            onSubmitEditing={handleContinue}
+            returnKeyType="go"
+            onSubmitEditing={handleSave}
           />
 
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           <Pressable
-            style={[styles.button, (!name.trim() || loading) && styles.buttonDisabled]}
-            onPress={handleContinue}
-            disabled={!name.trim() || loading}
+            style={[styles.button, (password.length < 6 || loading) && styles.buttonDisabled]}
+            onPress={handleSave}
+            disabled={password.length < 6 || loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Saving...' : 'Continue'}
+              {loading ? 'Saving…' : 'Save & sign in'}
             </Text>
           </Pressable>
         </View>

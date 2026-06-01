@@ -19,7 +19,7 @@ export default function PrivacyPolicyScreen() {
         <Text style={styles.updated}>Last updated: February 23, 2026</Text>
 
         <Text style={styles.body}>
-          credits. ("we", "our", "us") is a social film tracking app that lets you track actors, mark movies and TV shows as watched, and connect with friends. This Privacy Policy explains what data we collect, how we use it, and your rights.
+          creditz. ("we", "our", "us") is a social film tracking app that lets you track actors, mark movies and TV shows as watched, and connect with friends. This Privacy Policy explains what data we collect, how we use it, and your rights.
         </Text>
 
         <Text style={styles.heading}>Data We Collect</Text>

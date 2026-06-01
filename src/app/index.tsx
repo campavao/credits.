@@ -4,7 +4,7 @@ import { useAuth } from '../providers/AuthProvider';
 import { colors, surface } from '../lib/theme';
 
 export default function Index() {
-  const { session, profile, loading } = useAuth();
+  const { session, profile, loading, passwordRecovery } = useAuth();
 
   if (loading) {
     return (
@@ -12,6 +12,11 @@ export default function Index() {
         <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
+  }
+
+  // Arrived via a password-reset email link — go set a new password.
+  if (passwordRecovery) {
+    return <Redirect href="/(auth)/reset-password" />;
   }
 
   if (!session) {

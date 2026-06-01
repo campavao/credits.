@@ -19,7 +19,7 @@ export default function TermsOfServiceScreen() {
         <Text style={styles.updated}>Last updated: February 23, 2026</Text>
 
         <Text style={styles.body}>
-          By using credits. ("the App"), you agree to these Terms of Service. If you do not agree, please do not use the App.
+          By using creditz. ("the App"), you agree to these Terms of Service. If you do not agree, please do not use the App.
         </Text>
 
         <Text style={styles.heading}>Acceptable Use</Text>

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "credits.",
+    "name": "creditz.",
     "slug": "credits",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
       "buildNumber": "1",
       "privacyUrl": "credits://privacy-policy",
       "infoPlist": {
-        "NSContactsUsageDescription": "credits. uses your contacts to help you find friends who are already on the app.",
+        "NSContactsUsageDescription": "creditz. uses your contacts to help you find friends who are already on the app.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },

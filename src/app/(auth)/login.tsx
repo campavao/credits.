@@ -13,14 +13,89 @@ import { router } from 'expo-router';
 import { useAuth } from '../../providers/AuthProvider';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 
+const isWeb = Platform.OS === 'web';
+
 export default function LoginScreen() {
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState<'phone' | 'email'>('phone');
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [mode, setMode] = useState<'phone' | 'email'>(
+    isWeb ? 'email' : 'phone'
+  );
   const [isSignUp, setIsSignUp] = useState(true);
-  const { signInWithPhone, signUpWithPassword, signInWithPassword } = useAuth();
+  const { signInWithPhone, signUpWithPassword, signInWithPassword, resetPassword } = useAuth();
+
+  // Web: "Forgot password?" — emails a reset link to whatever's in the email field.
+  const handleForgotPassword = async () => {
+    setError(null);
+    setNotice(null);
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      setError('Enter your email above first, then tap "Forgot password".');
+      return;
+    }
+    setLoading(true);
+    const { error } = await resetPassword(cleanEmail);
+    setLoading(false);
+    if (error) setError(error.message);
+    else setNotice('Reset link sent! Check your email, then come back and sign in with your new password.');
+  };
+
+  // Web: one button that signs in if the account exists, or creates it if not —
+  // so non-technical friends never have to choose "sign up" vs "sign in".
+  const handleWebAuth = async () => {
+    setError(null);
+    setNotice(null);
+    const cleanEmail = email.trim();
+    if (!cleanEmail || !password) {
+      setError('Enter your email and a password.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+    setLoading(true);
+
+    // Try signing in first.
+    const signIn = await signInWithPassword(cleanEmail, password);
+    if (!signIn.error) {
+      setLoading(false);
+      router.replace('/');
+      return;
+    }
+
+    // Account exists but the email hasn't been verified yet.
+    if (/confirm/i.test(signIn.error.message)) {
+      setLoading(false);
+      setNotice('Almost there! Check your email and click the confirmation link to finish signing up.');
+      return;
+    }
+
+    // Sign-in failed — either it's a new account, or the password is wrong.
+    const signUp = await signUpWithPassword(cleanEmail, password);
+    setLoading(false);
+
+    if (signUp.error) {
+      // Account exists but sign-in failed above → the password was wrong.
+      if (/already|registered|exists/i.test(signUp.error.message)) {
+        setError('That email is already in use. Check your password and try again.');
+      } else {
+        setError(signUp.error.message);
+      }
+      return;
+    }
+
+    if (signUp.needsConfirmation) {
+      setNotice("Account created! Check your email for a confirmation link, then come back and enter the same details.");
+      return;
+    }
+
+    router.replace('/');
+  };
 
   const handlePhoneSubmit = async () => {
     const digits = phone.replace(/\D/g, '');
@@ -60,11 +135,58 @@ export default function LoginScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <View style={styles.content}>
-        <Text style={styles.logo}>credits.</Text>
+        <Text style={styles.logo}>creditz.</Text>
         <Text style={styles.tagline}>track actors, not just movies</Text>
 
         <View style={styles.form}>
-          {mode === 'phone' ? (
+          {isWeb ? (
+            <>
+              <TextInput
+                style={styles.input}
+                placeholder="Email address"
+                placeholderTextColor={colors.gray[500]}
+                value={email}
+                onChangeText={(t) => { setEmail(t); setError(null); }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoFocus
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Password"
+                placeholderTextColor={colors.gray[500]}
+                value={password}
+                onChangeText={(t) => { setPassword(t); setError(null); }}
+                secureTextEntry
+                autoCapitalize="none"
+                returnKeyType="go"
+                onSubmitEditing={handleWebAuth}
+              />
+
+              {error && <Text style={styles.errorText}>{error}</Text>}
+              {notice && <Text style={styles.noticeText}>{notice}</Text>}
+
+              <Pressable
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleWebAuth}
+                disabled={loading}
+              >
+                <Text style={styles.buttonText}>
+                  {loading ? 'One sec…' : 'Continue'}
+                </Text>
+              </Pressable>
+
+              <Pressable onPress={handleForgotPassword} disabled={loading}>
+                <Text style={styles.switchText}>Forgot password?</Text>
+              </Pressable>
+
+              <Text style={styles.hintText}>
+                New here? Just enter your email and pick a password — we'll create your account automatically.
+              </Text>
+            </>
+          ) : mode === 'phone' ? (
             <>
               <View style={styles.phoneRow}>
                 <Text style={styles.phonePrefix}>+1</Text>
@@ -230,6 +352,24 @@ const styles = StyleSheet.create({
     color: colors.gray[400],
     fontSize: fontSize.sm,
     textAlign: 'center',
+  },
+  errorText: {
+    color: '#F87171',
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+  },
+  noticeText: {
+    color: colors.accent,
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  hintText: {
+    color: colors.gray[500],
+    fontSize: fontSize.sm,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: spacing.sm,
   },
   legalText: {
     color: colors.gray[500],

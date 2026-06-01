@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       to: t.token,
       sound: 'default',
       title: 'New Friend Request',
-      body: `${requesterName} wants to be friends on credits.`,
+      body: `${requesterName} wants to be friends on creditz.`,
       data: { type: 'friend_request', friendshipId: payload.record.id },
     }));
 

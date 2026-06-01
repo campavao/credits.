@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
 import { Session, User as AuthUser } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { User } from '../types/database';
@@ -10,8 +11,11 @@ interface AuthContextType {
   loading: boolean;
   signInWithPhone: (phone: string) => Promise<{ error: Error | null }>;
   verifyOtp: (phone: string, token: string) => Promise<{ error: Error | null }>;
-  signUpWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUpWithPassword: (email: string, password: string) => Promise<{ error: Error | null; needsConfirmation?: boolean }>;
   signInWithPassword: (email: string, password: string) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (password: string) => Promise<{ error: Error | null }>;
+  passwordRecovery: boolean;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateDisplayName: (name: string) => Promise<{ error: Error | null }>;
@@ -24,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -43,6 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // Fired when the user arrives via a password-reset email link.
+        if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
         setSession(session);
         if (session?.user) {
           await fetchProfile(session.user.id);
@@ -66,8 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUpWithPassword = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error as Error | null };
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    // When "Confirm email" is ON in Supabase, sign-up succeeds but returns no
+    // session — the user must click an emailed link before they can sign in.
+    const needsConfirmation = !error && !data.session;
+    return { error: error as Error | null, needsConfirmation };
   };
 
   const signInWithPassword = async (email: string, password: string) => {
@@ -75,10 +85,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error: error as Error | null };
   };
 
+  const resetPassword = async (email: string) => {
+    // The email link must return the user to the app; on web that's the current
+    // origin (e.g. https://creditz.vercel.app). This URL must be allow-listed in
+    // Supabase → Authentication → URL Configuration → Redirect URLs.
+    const redirectTo = Platform.OS === 'web' ? window.location.origin : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return { error: error as Error | null };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (!error) setPasswordRecovery(false);
+    return { error: error as Error | null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setSession(null);
     setProfile(null);
+    setPasswordRecovery(false);
   };
 
   const refreshProfile = async () => {
@@ -116,6 +142,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyOtp,
         signUpWithPassword,
         signInWithPassword,
+        resetPassword,
+        updatePassword,
+        passwordRecovery,
         signOut,
         refreshProfile,
         updateDisplayName,
