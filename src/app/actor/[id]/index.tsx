@@ -53,10 +53,17 @@ export default function ActorDetailScreen() {
   const { details, filmography, loading, error } = useActor(actorId);
   const { isSeen } = useSeenTitles();
 
+  // router.back() no-ops without in-app history (deep link / refresh / shared
+  // link) — fall back to a real destination.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/(tabs)/home');
+  };
+
   if (error) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={goBack}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
@@ -71,7 +78,7 @@ export default function ActorDetailScreen() {
   if (loading || !details) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={goBack}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
@@ -108,7 +115,7 @@ export default function ActorDetailScreen() {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={goBack}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>

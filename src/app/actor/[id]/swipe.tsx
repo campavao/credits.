@@ -15,6 +15,13 @@ export default function ActorSwipeScreen() {
   const { details, filmography, loading, error } = useActor(actorId);
   const { seenIds, loading: seenLoading, markAsSeen, markAsUnseen } = useSeenTitles();
 
+  // router.back() no-ops when there's no in-app history (deep link / refresh /
+  // shared link), so fall back to the actor's detail screen.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace({ pathname: '/actor/[id]', params: { id: String(actorId) } });
+  };
+
   // Pre-filter here in the parent where both are guaranteed loaded
   const unseenFilmography = useMemo(
     () => filmography.filter((f) => !seenIds.has(f.id)),
@@ -25,7 +32,7 @@ export default function ActorSwipeScreen() {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
-          <Pressable style={styles.backButton} onPress={() => router.back()}>
+          <Pressable style={styles.backButton} onPress={goBack}>
             <Ionicons name="chevron-back" size={20} color={colors.accent} />
             <Text style={styles.backText}>Back</Text>
           </Pressable>
