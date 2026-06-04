@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { useFriends } from '../../hooks/useFriends';
@@ -41,6 +41,15 @@ export default function FriendsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
+  const [sentIds, setSentIds] = useState<Set<string>>(new Set());
+
+  // Re-fetch when the screen regains focus (e.g. returning from the comparison
+  // screen after removing a friend) so the list never shows stale data.
+  useFocusEffect(
+    useCallback(() => {
+      refresh();
+    }, [refresh])
+  );
 
   const handleSearch = async (text: string) => {
     setSearchQuery(text);
@@ -52,6 +61,21 @@ export default function FriendsScreen() {
     const results = await searchUsers(text.trim());
     setSearchResults(results);
     setSearching(false);
+  };
+
+  // Optimistically mark as requested so the button disables immediately and the
+  // same person can't be requested twice; roll back if the insert fails.
+  const handleAdd = async (userId: string) => {
+    setSentIds((prev) => new Set(prev).add(userId));
+    try {
+      await sendRequest(userId);
+    } catch {
+      setSentIds((prev) => {
+        const next = new Set(prev);
+        next.delete(userId);
+        return next;
+      });
+    }
   };
 
   return (
@@ -86,9 +110,15 @@ export default function FriendsScreen() {
                     key={u.id}
                     user={u}
                     action={
-                      <Pressable style={styles.addButton} onPress={() => sendRequest(u.id)}>
-                        <Text style={styles.addButtonText}>Add</Text>
-                      </Pressable>
+                      sentIds.has(u.id) ? (
+                        <View style={styles.requestedPill}>
+                          <Text style={styles.requestedText}>Requested</Text>
+                        </View>
+                      ) : (
+                        <Pressable style={styles.addButton} onPress={() => handleAdd(u.id)}>
+                          <Text style={styles.addButtonText}>Add</Text>
+                        </Pressable>
+                      )
                     }
                   />
                 ))}
@@ -228,6 +258,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.sm,
+  },
+  requestedPill: {
+    backgroundColor: surface.overlay,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+  },
+  requestedText: {
+    color: colors.gray[400],
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
   addButtonText: {
     color: colors.white,

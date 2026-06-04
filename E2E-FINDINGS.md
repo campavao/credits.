@@ -6,7 +6,7 @@
 
 ---
 
-## Status (fixed in this commit)
+## Status (fixed)
 
 | # | Finding | Status |
 |---|---------|--------|
@@ -14,7 +14,8 @@
 | P1 | Home stuck on skeletons for empty account | ✅ **Fixed** (was a symptom of the P0; home now loads data / empty state) |
 | P1 | "Back" dead on deep-linked screens | ✅ **Fixed** — shared `goBack()` helper rolled out to every pushed screen; verified Back from a deep-linked screen now lands on home |
 | P2 | Sign Out dead on web (`Alert.alert`) | ✅ **Fixed** — cross-platform `confirmAction`; now confirms, signs out, and redirects to login. Same fix applied to "Remove Friend" |
-| P2 | Stale `useFocusEffect` refreshers | ⬜ Not yet (left as-is) |
+| P3 | Friends: "Add" gave no feedback; list stale after Remove | ✅ **Fixed** — "Requested" button state + `useFocusEffect` refresh on the Friends tab |
+| P2 | Stale `useFocusEffect` refreshers on Home/Search/Profile | ⬜ Not yet (left as-is) |
 | P3 | Loading-state `try/finally`, dead code, deprecation warnings, swipe-button clipping, `app/search.tsx` dead duplicate | ⬜ Not yet (documented below) |
 
 New shared helpers added: `src/lib/navigation.ts` (`goBack`) and `src/lib/confirm.ts` (`confirmAction`).
@@ -200,6 +201,14 @@ same way login/onboarding already do.
   and `"shadow*" style props are deprecated` (many repeats). Worth migrating to `style.pointerEvents` /
   `boxShadow` to cut the noise and stay ahead of RN-Web removals.
 
+### Found during the Friends two-account pass (both now ✅ fixed)
+- ✅ **Fixed — "Add" now shows "Requested"** (`friends.tsx`). Added a `sentIds` set + optimistic `handleAdd`;
+  the button disables/relabels to "Requested" immediately so the same person can't be requested twice.
+  Verified: after Add, the "Add" button is replaced by a muted "Requested" pill.
+- ✅ **Fixed — Friends list refreshes on focus** (`friends.tsx`). Added `useFocusEffect(refresh)` (refresh is
+  `useCallback`-stable, so no loop) so returning from the comparison screen after a "Remove Friend" re-fetches.
+  Verified: returning to the Friends tab fires exactly one `friendships` fetch.
+
 ---
 
 ## ✅ Verified working (web, on a healthy/non-deadlocked session)
@@ -214,7 +223,11 @@ same way login/onboarding already do.
   "Start Swiping" (with immediate spinner feedback).
 - **Swipe deck: SEEN and SKIP both work** — deck advances, counter updates, SEEN persists the upsert. (These
   were the subject of an earlier fix and are functioning.)
-- Friends: empty state, friend-search query executes (no hang).
+- **Friends — full two-account pass (account A ⇄ account B):** search by name (self excluded) → send request
+  (Add) → recipient sees "Pending Requests (1)" with Accept/Decline → Accept moves them to the friends list →
+  open friend comparison (You/Them/Shared counts, Film Compatibility %, Shared Titles, Shared Actors with
+  comparison bars — math verified: A=2, B=1, shared=1 → 50%) → **Remove Friend** (the `confirmAction` fix)
+  confirms, deletes the friendship, and navigates back. All steps ran with the auth lock never sticking.
 - Profile: avatar/initial, editable name, live stats, "Most Watched Actor" hero, Recently Watched.
 - **Data pipeline works:** after marking 2 titles watched, stats showed 2 watched / 39 actors, and the
   fetch-credits webhook populated tracked actors (DiCaprio surfaced as "Most Watched Actor, 2 films seen").
