@@ -28,7 +28,7 @@ export default function ProfileScreen() {
       refreshStats();
       refreshActors();
       refreshTitles();
-    }, [])
+    }, [refreshStats, refreshActors, refreshTitles])
   );
   const [editing, setEditing] = useState(false);
   const [nameInput, setNameInput] = useState('');

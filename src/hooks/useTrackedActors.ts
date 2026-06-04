@@ -25,65 +25,67 @@ export function useTrackedActors() {
 
   const fetchActors = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    try {
+      // Get the user's seen title IDs
+      const { data: seenData } = await supabase
+        .from('seen_titles')
+        .select('title_id')
+        .eq('user_id', user.id);
 
-    // Get the user's seen title IDs
-    const { data: seenData } = await supabase
-      .from('seen_titles')
-      .select('title_id')
-      .eq('user_id', user.id);
-
-    if (!seenData || seenData.length === 0) {
-      setActors([]);
-      setLoading(false);
-      return;
-    }
-
-    const titleIds = seenData.map((s) => s.title_id);
-
-    // Get appearances for those titles with actor info and media type
-    const { data: appearances } = await supabase
-      .from('appearances')
-      .select('actor_id, title_id, actors(id, name, profile_path), titles(media_type)')
-      .in('title_id', titleIds.slice(0, 200));
-
-    if (!appearances) {
-      setActors([]);
-      setLoading(false);
-      return;
-    }
-
-    // Group by actor and count movies vs TV
-    const actorMap = new Map<number, TrackedActor>();
-    for (const a of appearances) {
-      const actor = (a as any).actors;
-      const title = (a as any).titles;
-      if (!actor) continue;
-      const isMovie = title?.media_type === 'movie';
-      const existing = actorMap.get(actor.id);
-      if (existing) {
-        existing.seen_count++;
-        if (isMovie) existing.movie_count++;
-        else existing.tv_count++;
-      } else {
-        actorMap.set(actor.id, {
-          id: actor.id,
-          name: actor.name,
-          profile_path: actor.profile_path,
-          seen_count: 1,
-          movie_count: isMovie ? 1 : 0,
-          tv_count: isMovie ? 0 : 1,
-        });
+      if (!seenData || seenData.length === 0) {
+        setActors([]);
+        return;
       }
+
+      const titleIds = seenData.map((s) => s.title_id);
+
+      // Get appearances for those titles with actor info and media type
+      const { data: appearances } = await supabase
+        .from('appearances')
+        .select('actor_id, title_id, actors(id, name, profile_path), titles(media_type)')
+        .in('title_id', titleIds.slice(0, 200));
+
+      if (!appearances) {
+        setActors([]);
+        return;
+      }
+
+      // Group by actor and count movies vs TV
+      const actorMap = new Map<number, TrackedActor>();
+      for (const a of appearances) {
+        const actor = (a as any).actors;
+        const title = (a as any).titles;
+        if (!actor) continue;
+        const isMovie = title?.media_type === 'movie';
+        const existing = actorMap.get(actor.id);
+        if (existing) {
+          existing.seen_count++;
+          if (isMovie) existing.movie_count++;
+          else existing.tv_count++;
+        } else {
+          actorMap.set(actor.id, {
+            id: actor.id,
+            name: actor.name,
+            profile_path: actor.profile_path,
+            seen_count: 1,
+            movie_count: isMovie ? 1 : 0,
+            tv_count: isMovie ? 0 : 1,
+          });
+        }
+      }
+
+      // Sort by seen_count descending, take top 10
+      const sorted = Array.from(actorMap.values())
+        .sort((a, b) => b.seen_count - a.seen_count)
+        .slice(0, 10);
+
+      setActors(sorted);
+    } catch {
+      // Network/unexpected error — keep prior actors; spinner clears below.
+    } finally {
+      // Initial-load-only spinner + can't strand on a failed/stuck request.
+      setLoading(false);
     }
-
-    // Sort by seen_count descending, take top 10
-    const sorted = Array.from(actorMap.values())
-      .sort((a, b) => b.seen_count - a.seen_count)
-      .slice(0, 10);
-
-    setActors(sorted);
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

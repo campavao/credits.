@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../providers/AuthProvider';
 
@@ -17,21 +17,29 @@ export function useStats() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchStats = async () => {
+  // `loading` is only ever true for the initial load (it starts true and the
+  // first fetch's `finally` clears it). Refreshes — e.g. the on-focus refresh —
+  // don't re-toggle it, so returning to a screen doesn't flash skeletons. The
+  // `finally` also guarantees a stuck request can never strand the spinner.
+  const fetchStats = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
-    const { data, error } = await supabase.rpc('get_user_stats', {
-      user_id_input: user.id,
-    });
-    if (!error && data && data.length > 0) {
-      setStats(data[0]);
+    try {
+      const { data, error } = await supabase.rpc('get_user_stats', {
+        user_id_input: user.id,
+      });
+      if (!error && data && data.length > 0) {
+        setStats(data[0]);
+      }
+    } catch {
+      // Network/unexpected error — keep prior stats; the spinner clears below.
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchStats();
-  }, [user]);
+  }, [fetchStats]);
 
   return { stats, loading, refresh: fetchStats };
 }

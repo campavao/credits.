@@ -17,28 +17,32 @@ export function useRecentlyWatched() {
 
   const fetchRecent = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('seen_titles')
+        .select('title_id, watched_at, titles(id, title, poster_path, media_type)')
+        .eq('user_id', user.id)
+        .order('watched_at', { ascending: false })
+        .limit(20);
 
-    const { data, error } = await supabase
-      .from('seen_titles')
-      .select('title_id, watched_at, titles(id, title, poster_path, media_type)')
-      .eq('user_id', user.id)
-      .order('watched_at', { ascending: false })
-      .limit(20);
-
-    if (!error && data) {
-      const mapped = data
-        .filter((d: any) => d.titles)
-        .map((d: any) => ({
-          title_id: d.title_id,
-          title: d.titles.title,
-          poster_path: d.titles.poster_path,
-          media_type: d.titles.media_type,
-          watched_at: d.watched_at,
-        }));
-      setTitles(mapped);
+      if (!error && data) {
+        const mapped = data
+          .filter((d: any) => d.titles)
+          .map((d: any) => ({
+            title_id: d.title_id,
+            title: d.titles.title,
+            poster_path: d.titles.poster_path,
+            media_type: d.titles.media_type,
+            watched_at: d.watched_at,
+          }));
+        setTitles(mapped);
+      }
+    } catch {
+      // Network/unexpected error — keep prior titles; spinner clears below.
+    } finally {
+      // Initial-load-only spinner + can't strand on a failed/stuck request.
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

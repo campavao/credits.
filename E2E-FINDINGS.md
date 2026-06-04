@@ -15,10 +15,15 @@
 | P1 | "Back" dead on deep-linked screens | ✅ **Fixed** — shared `goBack()` helper rolled out to every pushed screen; verified Back from a deep-linked screen now lands on home |
 | P2 | Sign Out dead on web (`Alert.alert`) | ✅ **Fixed** — cross-platform `confirmAction`; now confirms, signs out, and redirects to login. Same fix applied to "Remove Friend" |
 | P3 | Friends: "Add" gave no feedback; list stale after Remove | ✅ **Fixed** — "Requested" button state + `useFocusEffect` refresh on the Friends tab |
-| P2 | Stale `useFocusEffect` refreshers on Home/Search/Profile | ⬜ Not yet (left as-is) |
-| P3 | Loading-state `try/finally`, dead code, deprecation warnings, swipe-button clipping, `app/search.tsx` dead duplicate | ⬜ Not yet (documented below) |
+| P2 | Stale `useFocusEffect` refreshers on Home/Search/Profile | ✅ **Fixed** — `fetchStats` memoized; focus effects now depend on the (stable) refresh fns. Verified: returning to Home now fires a fresh fetch (was 0 before) |
+| P2/P3 | Loading-state resilience (`try/finally`) | ✅ **Fixed** — every data hook uses `try/catch/finally`; the spinner can't get stranded, and refreshes are silent (initial-load-only spinner, no skeleton flash) |
+| P3 | Dead code (`home.tsx`) + dead duplicate (`app/search.tsx`) | ✅ **Fixed** — removed the no-op `topActorProfileUrl`, replaced the non-animating `AnimatedNumber` with a plain `StatItem`, deleted `app/search.tsx` |
+| P3 | RN-Web deprecation warnings (`pointerEvents`, `shadow*`) | ⬜ Skipped — dev-only noise; migrating `shadow*`→`boxShadow` risks changing native shadow rendering, and most `pointerEvents` warnings come from libraries, not app code. Low value / not worth the risk right now. |
+| P3 | Swipe action buttons clipped on tall *desktop-web* viewports | ⬜ Not done — mobile-first, only affects wide desktop web |
 
 New shared helpers added: `src/lib/navigation.ts` (`goBack`) and `src/lib/confirm.ts` (`confirmAction`).
+Test suite added: `npm test` (jest-expo) — 18 tests covering the auth-lock guard, `goBack`, `confirmAction`,
+loading resilience/silent-refresh, and `formatSeenSubtitle`.
 
 ---
 

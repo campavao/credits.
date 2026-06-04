@@ -27,7 +27,7 @@ export default function SearchTabScreen() {
   useFocusEffect(
     useCallback(() => {
       refreshActors();
-    }, [])
+    }, [refreshActors])
   );
 
   const isSearching = query.trim().length > 0;

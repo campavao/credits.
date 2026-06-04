@@ -20,16 +20,19 @@ export function useFriendsActivity() {
 
   const fetchActivity = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
-
-    const { data, error } = await supabase.rpc('get_friends_recent_activity', {
-      user_id_input: user.id,
-    });
-
-    if (!error && data) {
-      setActivity(data);
+    try {
+      const { data, error } = await supabase.rpc('get_friends_recent_activity', {
+        user_id_input: user.id,
+      });
+      if (!error && data) {
+        setActivity(data);
+      }
+    } catch {
+      // Network/unexpected error — keep prior activity; spinner clears below.
+    } finally {
+      // Initial-load-only spinner + can't strand on a failed/stuck request.
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => {

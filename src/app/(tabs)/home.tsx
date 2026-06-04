@@ -1,8 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from 'expo-router';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { router } from 'expo-router';
 import { useStats } from '../../hooks/useStats';
 import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
@@ -13,16 +12,9 @@ import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
 import { ActorPortraitCard, ActorPortraitCardSkeleton } from '../../components/ActorPortraitCard';
 import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
 import { getProfileUrl } from '../../lib/tmdb';
-import { surface, colors, spacing, fontSize, fontWeight, springs } from '../../lib/theme';
+import { surface, colors, spacing, fontSize, fontWeight } from '../../lib/theme';
 
-function AnimatedNumber({ value, label }: { value: number; label: string }) {
-  const animatedValue = useSharedValue(0);
-
-  useEffect(() => {
-    animatedValue.value = withSpring(value, springs.default);
-  }, [value]);
-
-  // We'll just display the target value since RN text doesn't animate content easily
+function StatItem({ value, label }: { value: number; label: string }) {
   return (
     <View style={styles.statItem}>
       <Text style={styles.statNumber}>{value}</Text>
@@ -37,23 +29,23 @@ export default function HomeScreen() {
   const { titles, loading: titlesLoading, refresh: refreshTitles } = useRecentlyWatched();
   const { activity, loading: activityLoading, refresh: refreshActivity } = useFriendsActivity();
 
+  // Refresh on focus so returning to Home reflects newly-watched titles, etc.
+  // The refresh fns are useCallback-stable (keyed on the user), so this doesn't
+  // refetch in a loop, and the hooks keep their spinner for the initial load
+  // only — so these focus refreshes are silent (no skeleton flash).
   useFocusEffect(
     useCallback(() => {
       refreshStats();
       refreshActors();
       refreshTitles();
       refreshActivity();
-    }, [])
+    }, [refreshStats, refreshActors, refreshTitles, refreshActivity])
   );
 
   // De-duplicate friend activity by title_id (show each title once)
   const uniqueActivity = activity.filter(
     (item, index, arr) => arr.findIndex((a) => a.title_id === item.title_id) === index
   );
-
-  const topActorProfileUrl = stats?.most_completed_actor_id
-    ? null // We don't have the profile_path in stats — use tracked actors
-    : null;
 
   // Find the top actor from tracked actors for the hero card
   const topActor = actors.length > 0 ? actors[0] : null;
@@ -167,9 +159,9 @@ export default function HomeScreen() {
 
             {/* Stats row */}
             <View style={styles.statsRow}>
-              <AnimatedNumber value={stats?.total_watched ?? 0} label="Watched" />
-              <AnimatedNumber value={stats?.unique_actors ?? 0} label="Actors" />
-              <AnimatedNumber value={stats?.friends_count ?? 0} label="Friends" />
+              <StatItem value={stats?.total_watched ?? 0} label="Watched" />
+              <StatItem value={stats?.unique_actors ?? 0} label="Actors" />
+              <StatItem value={stats?.friends_count ?? 0} label="Friends" />
             </View>
           </>
         )}
