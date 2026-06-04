@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Platform, StyleSheet } from 'react-native';
 import { AuthProvider } from '../providers/AuthProvider';
+import { VercelAnalytics } from '../components/VercelAnalytics';
 import { surface } from '../lib/theme';
 
 export default function RootLayout() {
@@ -21,6 +22,7 @@ export default function RootLayout() {
         >
           <Stack.Screen name="actor-search" />
         </Stack>
+        <VercelAnalytics />
       </AuthProvider>
     </GestureHandlerRootView>
   );
