@@ -6,12 +6,14 @@ import { colors, surface } from '../lib/theme';
 export default function Index() {
   const { session, profile, loading, passwordRecovery } = useAuth();
 
+  const spinner = (
+    <View style={styles.container}>
+      <ActivityIndicator size="large" color={colors.accent} />
+    </View>
+  );
+
   if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color={colors.accent} />
-      </View>
-    );
+    return spinner;
   }
 
   // Arrived via a password-reset email link — go set a new password.
@@ -23,7 +25,14 @@ export default function Index() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  if (profile && !profile.display_name) {
+  // Session exists but the profile row hasn't loaded yet (it's fetched in its
+  // own effect now). Wait so a brand-new user routes to onboarding instead of
+  // briefly flashing the home tab.
+  if (!profile) {
+    return spinner;
+  }
+
+  if (!profile.display_name) {
     return <Redirect href="/(auth)/onboarding" />;
   }
 

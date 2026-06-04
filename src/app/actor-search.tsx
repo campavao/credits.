@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useActorSearch } from '../hooks/useActorSearch';
 import { getProfileUrl } from '../lib/tmdb';
+import { goBack } from '../lib/navigation';
 import { Skeleton } from '../components/ui/Skeleton';
 import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 
@@ -13,7 +14,7 @@ export default function ActorSearchScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => goBack()} style={styles.backButton}>
           <Ionicons name="chevron-back" size={24} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>

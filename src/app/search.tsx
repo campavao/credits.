@@ -1,9 +1,9 @@
 import { View, Text, FlatList, StyleSheet } from 'react-native';
-import { router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable } from 'react-native';
 import { useSearch } from '../hooks/useSearch';
+import { goBack } from '../lib/navigation';
 import { SearchBar } from '../components/ui/SearchBar';
 import { TitleCard } from '../components/TitleCard';
 import { Skeleton } from '../components/ui/Skeleton';
@@ -21,7 +21,7 @@ export default function SearchScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.headerRow}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => goBack()}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>

@@ -10,13 +10,13 @@ import {
   StyleSheet,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as SMS from 'expo-sms';
 import { useContactImport } from '../hooks/useContactImport';
 import { useFriends } from '../hooks/useFriends';
 import { FriendRow } from '../components/FriendRow';
 import { SearchBar } from '../components/ui/SearchBar';
+import { goBack } from '../lib/navigation';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../lib/theme';
 import type { User } from '../types/database';
 
@@ -80,7 +80,7 @@ export default function ContactsImportScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => router.back()} hitSlop={12}>
+        <Pressable onPress={() => goBack('/(tabs)/friends')} hitSlop={12}>
           <Ionicons name="chevron-back" size={28} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Find Friends</Text>

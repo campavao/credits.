@@ -1,11 +1,12 @@
 import { View, Text, Image, FlatList, Pressable, StyleSheet } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTitle } from '../../hooks/useTitle';
 import { useSeenTitles } from '../../hooks/useSeenTitles';
 import { ActorRow } from '../../components/ActorRow';
 import { getPosterUrl } from '../../lib/tmdb';
+import { goBack } from '../../lib/navigation';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../../lib/theme';
 import type { TMDBMovieDetails, TMDBTVDetails } from '../../types/tmdb';
@@ -19,7 +20,7 @@ export default function TitleDetailScreen() {
   if (error) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => goBack()}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
@@ -68,7 +69,7 @@ export default function TitleDetailScreen() {
       <FlatList
         ListHeaderComponent={
           <>
-            <Pressable style={styles.backButton} onPress={() => router.back()}>
+            <Pressable style={styles.backButton} onPress={() => goBack()}>
               <Ionicons name="chevron-back" size={20} color={colors.accent} />
               <Text style={styles.backText}>Back</Text>
             </Pressable>

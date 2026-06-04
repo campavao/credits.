@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View, Text, ScrollView, Image, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Image, Pressable, StyleSheet } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,6 +12,8 @@ import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
 import { PosterCard, PosterCardSkeleton } from '../../components/PosterCard';
 import { Skeleton } from '../../components/ui/Skeleton';
 import { getProfileUrl } from '../../lib/tmdb';
+import { goBack } from '../../lib/navigation';
+import { confirmAction } from '../../lib/confirm';
 import { surface, colors, spacing, fontSize, fontWeight, borderRadius } from '../../lib/theme';
 import type { User } from '../../types/database';
 
@@ -81,27 +83,22 @@ export default function FriendCompareScreen() {
 
   const handleRemoveFriend = () => {
     if (!friendshipId) return;
-    Alert.alert(
+    confirmAction(
       'Remove Friend',
       `Remove ${friend?.display_name || friend?.username || 'this friend'}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Remove',
-          style: 'destructive',
-          onPress: async () => {
-            await supabase.from('friendships').delete().eq('id', friendshipId);
-            router.back();
-          },
-        },
-      ]
+      async () => {
+        await supabase.from('friendships').delete().eq('id', friendshipId);
+        goBack('/(tabs)/friends');
+      },
+      'Remove',
+      true,
     );
   };
 
   if (loadingProfile || !friend) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => goBack('/(tabs)/friends')}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>
@@ -119,7 +116,7 @@ export default function FriendCompareScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => goBack('/(tabs)/friends')}>
           <Ionicons name="chevron-back" size={20} color={colors.accent} />
           <Text style={styles.backText}>Back</Text>
         </Pressable>

@@ -40,27 +40,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session?.user) await fetchProfile(session.user.id);
       setLoading(false);
     });
 
+    // IMPORTANT: keep this callback synchronous and free of Supabase data calls.
+    // auth-js invokes it while holding the auth-token Web Lock (navigator.locks);
+    // making a token-requiring call here (e.g. fetchProfile) re-enters that lock
+    // and deadlocks — after which EVERY later request hangs forever. Profile
+    // loading is handled by the dedicated effect below, outside the lock.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         // Fired when the user arrives via a password-reset email link.
         if (_event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
         setSession(session);
-        if (session?.user) {
-          await fetchProfile(session.user.id);
-        } else {
-          setProfile(null);
-        }
       }
     );
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Load (or clear) the profile whenever the signed-in user changes. Runs
+  // outside the onAuthStateChange callback, so it never touches the auth-token
+  // lock and can't deadlock the client.
+  useEffect(() => {
+    const userId = session?.user?.id;
+    if (userId) fetchProfile(userId);
+    else setProfile(null);
+  }, [session?.user?.id]);
 
   const signInWithPhone = async (phone: string) => {
     const { error } = await supabase.auth.signInWithOtp({ phone });

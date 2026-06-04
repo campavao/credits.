@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-nativ
 import { useLocalSearchParams, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../providers/AuthProvider';
+import { goBack } from '../../lib/navigation';
 import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../../lib/theme';
 
 export default function VerifyScreen() {
@@ -76,7 +77,7 @@ export default function VerifyScreen() {
           </Text>
         </Pressable>
 
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => goBack('/(auth)/login')}>
           <Text style={styles.backButtonText}>Back to login</Text>
         </Pressable>
       </View>
