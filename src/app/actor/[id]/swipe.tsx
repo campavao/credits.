@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useActor } from '../../../hooks/useActor';
 import { useSeenTitles } from '../../../hooks/useSeenTitles';
+import { useWatchList } from '../../../hooks/useWatchList';
 import { SwipeDeck } from '../../../components/SwipeDeck';
 import { colors, spacing, fontSize, fontWeight, surface } from '../../../lib/theme';
 import type { TMDBPersonCreditEntry } from '../../../types/tmdb';
@@ -14,6 +15,7 @@ export default function ActorSwipeScreen() {
   const actorId = Number(id);
   const { details, filmography, loading, error } = useActor(actorId);
   const { seenIds, loading: seenLoading, markAsSeen, markAsUnseen } = useSeenTitles();
+  const { addToWatchList, removeFromWatchList } = useWatchList();
 
   // router.back() no-ops when there's no in-app history (deep link / refresh /
   // shared link), so fall back to the actor's detail screen.
@@ -70,10 +72,24 @@ export default function ActorSwipeScreen() {
     // Skip -- do nothing
   };
 
-  const handleUndo = (item: TMDBPersonCreditEntry, direction: 'left' | 'right') => {
-    // Reverse a "seen" mark; skips had no effect to undo.
+  const handleSwipeUp = (item: TMDBPersonCreditEntry) => {
+    const releaseDate = item.release_date || item.first_air_date;
+    const releaseYear = releaseDate ? parseInt(releaseDate.substring(0, 4)) : null;
+    addToWatchList(
+      item.id,
+      item.media_type,
+      item.title || item.name || '',
+      item.poster_path,
+      releaseYear
+    );
+  };
+
+  const handleUndo = (item: TMDBPersonCreditEntry, direction: 'left' | 'right' | 'up') => {
+    // Reverse a "seen" mark or a "watch list" save; skips had no effect to undo.
     if (direction === 'right') {
       markAsUnseen(item.id);
+    } else if (direction === 'up') {
+      removeFromWatchList(item.id);
     }
   };
 
@@ -94,6 +110,7 @@ export default function ActorSwipeScreen() {
         seenIds={seenIds}
         onSwipeRight={handleSwipeRight}
         onSwipeLeft={handleSwipeLeft}
+        onSwipeUp={handleSwipeUp}
         onUndo={handleUndo}
         actorName={details.name}
       />
