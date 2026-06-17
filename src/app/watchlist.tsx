@@ -47,6 +47,7 @@ export default function WatchListScreen() {
                 title={item.title}
                 mediaType={item.media_type}
                 posterPath={item.poster_path}
+                releaseYear={item.release_year ? String(item.release_year) : undefined}
                 onPress={() =>
                   router.push({
                     pathname: '/title/[id]',

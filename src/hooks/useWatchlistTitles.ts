@@ -7,6 +7,7 @@ interface WatchlistTitle {
   title: string;
   poster_path: string | null;
   media_type: 'movie' | 'tv';
+  release_year: number | null;
   added_at: string;
 }
 
@@ -20,7 +21,7 @@ export function useWatchlistTitles() {
     try {
       const { data, error } = await supabase
         .from('watchlist')
-        .select('title_id, added_at, titles(id, title, poster_path, media_type)')
+        .select('title_id, added_at, titles(id, title, poster_path, media_type, release_year)')
         .eq('user_id', user.id)
         .order('added_at', { ascending: false });
 
@@ -32,6 +33,7 @@ export function useWatchlistTitles() {
             title: d.titles.title,
             poster_path: d.titles.poster_path,
             media_type: d.titles.media_type,
+            release_year: d.titles.release_year,
             added_at: d.added_at,
           }));
         setTitles(mapped);
