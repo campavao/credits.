@@ -6,6 +6,7 @@ import { router } from 'expo-router';
 import { useStats } from '../../hooks/useStats';
 import { useTrackedActors, formatSeenSubtitle } from '../../hooks/useTrackedActors';
 import { useRecentlyWatched } from '../../hooks/useRecentlyWatched';
+import { useWatchlistTitles } from '../../hooks/useWatchlistTitles';
 import { useFriendsActivity } from '../../hooks/useFriendsActivity';
 import { HeroCard, HeroCardSkeleton } from '../../components/HeroCard';
 import { HorizontalScrollRow } from '../../components/HorizontalScrollRow';
@@ -27,6 +28,7 @@ export default function HomeScreen() {
   const { stats, loading: statsLoading, refresh: refreshStats } = useStats();
   const { actors, loading: actorsLoading, refresh: refreshActors } = useTrackedActors();
   const { titles, loading: titlesLoading, refresh: refreshTitles } = useRecentlyWatched();
+  const { titles: watchlist, loading: watchlistLoading, refresh: refreshWatchlist } = useWatchlistTitles();
   const { activity, loading: activityLoading, refresh: refreshActivity } = useFriendsActivity();
 
   // Refresh on focus so returning to Home reflects newly-watched titles, etc.
@@ -38,8 +40,9 @@ export default function HomeScreen() {
       refreshStats();
       refreshActors();
       refreshTitles();
+      refreshWatchlist();
       refreshActivity();
-    }, [refreshStats, refreshActors, refreshTitles, refreshActivity])
+    }, [refreshStats, refreshActors, refreshTitles, refreshWatchlist, refreshActivity])
   );
 
   // De-duplicate friend activity by title_id (show each title once)
@@ -106,6 +109,31 @@ export default function HomeScreen() {
               )}
               renderSkeleton={() => <PosterCardSkeleton />}
             />
+
+            {/* Want to Watch — saved-for-later titles */}
+            {(watchlistLoading || watchlist.length > 0) && (
+              <HorizontalScrollRow
+                title="Want to Watch"
+                data={watchlist}
+                loading={watchlistLoading}
+                keyExtractor={(t) => String(t.title_id)}
+                onSeeAll={() => router.push('/watchlist')}
+                renderItem={(title) => (
+                  <PosterCard
+                    id={title.title_id}
+                    title={title.title}
+                    posterPath={title.poster_path}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/title/[id]',
+                        params: { id: title.title_id, mediaType: title.media_type },
+                      })
+                    }
+                  />
+                )}
+                renderSkeleton={() => <PosterCardSkeleton />}
+              />
+            )}
 
             {/* Friends Are Watching */}
             {uniqueActivity.length > 0 && (

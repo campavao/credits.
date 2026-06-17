@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useTitle } from '../../hooks/useTitle';
 import { useSeenTitles } from '../../hooks/useSeenTitles';
+import { useWatchList } from '../../hooks/useWatchList';
 import { ActorRow } from '../../components/ActorRow';
 import { getPosterUrl } from '../../lib/tmdb';
 import { goBack } from '../../lib/navigation';
@@ -16,6 +17,7 @@ export default function TitleDetailScreen() {
   const titleId = Number(id);
   const { details, cast, loading, error } = useTitle(titleId, mediaType as 'movie' | 'tv');
   const { isSeen, markAsSeen, markAsUnseen } = useSeenTitles();
+  const { isInWatchList, addToWatchList, removeFromWatchList } = useWatchList();
 
   if (error) {
     return (
@@ -54,6 +56,7 @@ export default function TitleDetailScreen() {
     : (details as TMDBTVDetails).first_air_date;
   const releaseYear = releaseDate ? parseInt(releaseDate.substring(0, 4)) : null;
   const seen = isSeen(titleId);
+  const onWatchList = isInWatchList(titleId);
   const posterUrl = getPosterUrl(details.poster_path, 'large');
 
   const handleToggleSeen = () => {
@@ -61,6 +64,16 @@ export default function TitleDetailScreen() {
       markAsUnseen(titleId);
     } else {
       markAsSeen(titleId, mediaType as 'movie' | 'tv', titleText, details.poster_path, releaseYear);
+      // Once you've watched it, it no longer belongs on the "want to watch" list.
+      if (onWatchList) removeFromWatchList(titleId);
+    }
+  };
+
+  const handleToggleWatchList = () => {
+    if (onWatchList) {
+      removeFromWatchList(titleId);
+    } else {
+      addToWatchList(titleId, mediaType as 'movie' | 'tv', titleText, details.poster_path, releaseYear);
     }
   };
 
@@ -93,18 +106,36 @@ export default function TitleDetailScreen() {
                 <Text style={styles.overview}>{details.overview}</Text>
               ) : null}
 
-              <Pressable
-                style={[styles.watchButton, seen && styles.watchButtonSeen]}
-                onPress={handleToggleSeen}
-              >
-                <Text style={[styles.watchButtonText, seen && styles.watchButtonTextSeen]}>
-                  {seen ? (
-                    <>
-                      <Ionicons name="checkmark-circle" size={18} color={colors.success} />{' Watched'}
-                    </>
-                  ) : 'Mark as Watched'}
-                </Text>
-              </Pressable>
+              <View style={styles.actions}>
+                <Pressable
+                  style={[styles.watchButton, seen && styles.watchButtonSeen]}
+                  onPress={handleToggleSeen}
+                >
+                  <Text style={[styles.watchButtonText, seen && styles.watchButtonTextSeen]}>
+                    {seen ? (
+                      <>
+                        <Ionicons name="checkmark-circle" size={18} color={colors.success} />{' Watched'}
+                      </>
+                    ) : 'Mark as Watched'}
+                  </Text>
+                </Pressable>
+
+                {/* Watch List is for titles you haven't seen yet, so hide it
+                    once a title is marked as watched. */}
+                {!seen && (
+                  <Pressable
+                    style={[styles.watchlistButton, onWatchList && styles.watchlistButtonActive]}
+                    onPress={handleToggleWatchList}
+                    hitSlop={8}
+                  >
+                    <Ionicons
+                      name={onWatchList ? 'bookmark' : 'bookmark-outline'}
+                      size={20}
+                      color={onWatchList ? colors.accent : colors.gray[300]}
+                    />
+                  </Pressable>
+                )}
+              </View>
             </View>
 
             <Text style={styles.castHeader}>Cast</Text>
@@ -186,12 +217,31 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     marginTop: spacing.sm,
   },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
   watchButton: {
+    flex: 1,
     backgroundColor: colors.accent,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     alignItems: 'center',
-    marginTop: spacing.md,
+    justifyContent: 'center',
+  },
+  watchlistButton: {
+    width: 52,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: surface.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  watchlistButtonActive: {
+    borderColor: colors.accent,
+    backgroundColor: surface.overlay,
   },
   watchButtonSeen: {
     backgroundColor: 'transparent',

@@ -154,6 +154,37 @@ export interface Database {
           }
         ];
       };
+      watchlist: {
+        Row: {
+          user_id: string;
+          title_id: number;
+          added_at: string;
+        };
+        Insert: {
+          user_id: string;
+          title_id: number;
+          added_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          title_id?: number;
+          added_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "watchlist_user_id_fkey";
+            columns: ["user_id"];
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "watchlist_title_id_fkey";
+            columns: ["title_id"];
+            referencedRelation: "titles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       friendships: {
         Row: {
           id: string;
@@ -306,4 +337,5 @@ export type Title = Database['public']['Tables']['titles']['Row'];
 export type Actor = Database['public']['Tables']['actors']['Row'];
 export type Appearance = Database['public']['Tables']['appearances']['Row'];
 export type SeenTitle = Database['public']['Tables']['seen_titles']['Row'];
+export type WatchlistItem = Database['public']['Tables']['watchlist']['Row'];
 export type Friendship = Database['public']['Tables']['friendships']['Row'];

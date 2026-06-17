@@ -21,6 +21,7 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="actor-search" />
+          <Stack.Screen name="watchlist" />
         </Stack>
         <VercelAnalytics />
       </AuthProvider>
