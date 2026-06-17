@@ -15,9 +15,9 @@ import { SWIPE_THRESHOLD } from '../lib/constants';
 import { colors, spacing, fontSize, fontWeight, borderRadius, surface } from '../lib/theme';
 import type { TMDBPersonCreditEntry } from '../types/tmdb';
 
-type SwipeDirection = 'left' | 'right';
+type SwipeDirection = 'left' | 'right' | 'up';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_VELOCITY = 500;
 
 interface SwipeDeckProps {
@@ -26,6 +26,7 @@ interface SwipeDeckProps {
   seenIds: Set<number>;
   onSwipeRight: (item: TMDBPersonCreditEntry) => void;
   onSwipeLeft: (item: TMDBPersonCreditEntry) => void;
+  onSwipeUp?: (item: TMDBPersonCreditEntry) => void;
   onUndo?: (item: TMDBPersonCreditEntry, direction: SwipeDirection) => void;
   actorName: string;
 }
@@ -36,6 +37,7 @@ export function SwipeDeck({
   seenIds,
   onSwipeRight,
   onSwipeLeft,
+  onSwipeUp,
   onUndo,
   actorName,
 }: SwipeDeckProps) {
@@ -44,6 +46,7 @@ export function SwipeDeck({
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
   // Records each swipe so it can be reversed (shake or Undo button)
   const historyRef = useRef<SwipeDirection[]>([]);
 
@@ -51,7 +54,7 @@ export function SwipeDeck({
   const total = filmography.length;
   const done = currentIndex >= deck.length;
 
-  // Reset translateX AFTER React re-renders and removes the old card
+  // Reset the card offset AFTER React re-renders and removes the old card
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
@@ -59,15 +62,18 @@ export function SwipeDeck({
       return;
     }
     translateX.value = 0;
+    translateY.value = 0;
   }, [currentIndex]);
 
   const advanceCard = useCallback(
-    (direction: 'left' | 'right') => {
+    (direction: SwipeDirection) => {
       const item = deck[currentIndex];
       if (!item) return;
 
       if (direction === 'right') {
         onSwipeRight(item);
+      } else if (direction === 'up') {
+        onSwipeUp?.(item);
       } else {
         onSwipeLeft(item);
       }
@@ -76,7 +82,7 @@ export function SwipeDeck({
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       setCurrentIndex((prev) => prev + 1);
     },
-    [currentIndex, deck, onSwipeRight, onSwipeLeft]
+    [currentIndex, deck, onSwipeRight, onSwipeLeft, onSwipeUp]
   );
 
   // Reverse the most recent swipe — re-shows the previous card and undoes its
@@ -96,9 +102,15 @@ export function SwipeDeck({
 
   const canUndo = currentIndex > 0;
 
-  // Tapping Skip/Seen animates the top card off then advances — same result as
-  // a swipe, for people (especially on web) who'd rather tap than drag.
+  // Tapping Skip/Seen/Watch List animates the top card off then advances — same
+  // result as a swipe, for people (especially on web) who'd rather tap than drag.
   const handleButtonSwipe = (direction: SwipeDirection) => {
+    if (direction === 'up') {
+      translateY.value = withTiming(-SCREEN_HEIGHT * 1.2, { duration: 300 }, (finished) => {
+        if (finished) runOnJS(advanceCard)('up');
+      });
+      return;
+    }
     translateX.value = withTiming(
       direction === 'right' ? SCREEN_WIDTH * 1.5 : -SCREEN_WIDTH * 1.5,
       { duration: 300 },
@@ -111,11 +123,21 @@ export function SwipeDeck({
   const panGesture = Gesture.Pan()
     .onUpdate((event) => {
       translateX.value = event.translationX;
+      translateY.value = event.translationY;
     })
     .onEnd((event) => {
       const threshold = SCREEN_WIDTH * SWIPE_THRESHOLD;
+      const upThreshold = SCREEN_HEIGHT * 0.18;
 
+      // Upward flick takes priority when it's the dominant axis — save to watch list.
       if (
+        -event.translationY > Math.abs(event.translationX) &&
+        (-event.translationY > upThreshold || -event.velocityY > SWIPE_VELOCITY)
+      ) {
+        translateY.value = withTiming(-SCREEN_HEIGHT * 1.2, { duration: 300 }, () => {
+          runOnJS(advanceCard)('up');
+        });
+      } else if (
         Math.abs(event.translationX) > threshold ||
         Math.abs(event.velocityX) > SWIPE_VELOCITY
       ) {
@@ -127,8 +149,11 @@ export function SwipeDeck({
             runOnJS(advanceCard)(direction);
           }
         );
+        // Settle any vertical drift so the card exits cleanly sideways.
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
       } else {
         translateX.value = withSpring(0, { damping: 15, stiffness: 150 });
+        translateY.value = withSpring(0, { damping: 15, stiffness: 150 });
       }
     });
 
@@ -187,6 +212,7 @@ export function SwipeDeck({
                 mediaType={item.media_type}
                 index={cardIndex}
                 translateX={translateX}
+                translateY={translateY}
                 isTop={isTop}
               />
             );
@@ -205,13 +231,12 @@ export function SwipeDeck({
         </Pressable>
 
         <Pressable
-          style={[styles.undoButton, !canUndo && styles.undoButtonDisabled]}
-          onPress={undoLast}
-          disabled={!canUndo}
-          hitSlop={10}
+          style={({ pressed }) => [styles.watchButton, pressed && styles.hintButtonPressed]}
+          onPress={() => handleButtonSwipe('up')}
+          hitSlop={12}
         >
-          <Ionicons name="arrow-undo" size={16} color={colors.gray[300]} />
-          <Text style={styles.undoText}>Undo</Text>
+          <Ionicons name="bookmark-outline" size={16} color={colors.accent} />
+          <Text style={styles.hintWatch}>Watch List</Text>
         </Pressable>
 
         <Pressable
@@ -223,6 +248,16 @@ export function SwipeDeck({
           <Ionicons name="chevron-forward" size={16} color={colors.success} />
         </Pressable>
       </View>
+
+      <Pressable
+        style={[styles.undoButton, !canUndo && styles.undoButtonDisabled]}
+        onPress={undoLast}
+        disabled={!canUndo}
+        hitSlop={10}
+      >
+        <Ionicons name="arrow-undo" size={16} color={colors.gray[300]} />
+        <Text style={styles.undoText}>Undo</Text>
+      </Pressable>
     </View>
   );
 }
@@ -272,10 +307,27 @@ const styles = StyleSheet.create({
   hintButtonPressed: {
     opacity: 0.55,
   },
+  watchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: surface.raised,
+    borderWidth: 1,
+    borderColor: colors.accent,
+  },
+  hintWatch: {
+    color: colors.accent,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.medium,
+  },
   undoButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    marginTop: spacing.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,

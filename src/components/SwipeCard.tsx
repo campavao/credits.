@@ -16,6 +16,7 @@ interface SwipeCardProps {
   mediaType: 'movie' | 'tv';
   index: number;
   translateX: SharedValue<number>;
+  translateY: SharedValue<number>;
   isTop: boolean;
 }
 
@@ -27,6 +28,7 @@ export function SwipeCard({
   mediaType,
   index,
   translateX,
+  translateY,
   isTop,
 }: SwipeCardProps) {
   const posterUrl = getPosterUrl(posterPath, 'large');
@@ -34,9 +36,11 @@ export function SwipeCard({
   const animatedStyle = useAnimatedStyle(() => {
     if (isTop) {
       const rotate = interpolate(translateX.value, [-SCREEN_WIDTH, 0, SCREEN_WIDTH], [-15, 0, 15]);
-      // Fade to 0 as card exits so it's invisible before unmount — prevents flash
+      // Fade to 0 as the card exits (any direction) so it's invisible before
+      // unmount — prevents a flash.
+      const dist = Math.max(Math.abs(translateX.value), Math.abs(translateY.value));
       const opacity = interpolate(
-        Math.abs(translateX.value),
+        dist,
         [0, SCREEN_WIDTH * 0.8, SCREEN_WIDTH * 1.2],
         [1, 1, 0],
         Extrapolation.CLAMP
@@ -45,25 +49,28 @@ export function SwipeCard({
         opacity,
         transform: [
           { translateX: translateX.value },
+          { translateY: translateY.value },
           { rotate: `${rotate}deg` },
         ],
       };
     }
 
-    // Cards underneath scale up and translate up as top card moves
+    // Cards underneath scale up and translate up as the top card moves (in any
+    // direction).
+    const progress = Math.max(Math.abs(translateX.value), Math.abs(translateY.value));
     const scale = interpolate(
-      Math.abs(translateX.value),
+      progress,
       [0, SCREEN_WIDTH],
       [1 - index * 0.05, 1 - (index - 1) * 0.05]
     );
-    const translateY = interpolate(
-      Math.abs(translateX.value),
+    const translateYStack = interpolate(
+      progress,
       [0, SCREEN_WIDTH],
       [index * 10, (index - 1) * 10]
     );
 
     return {
-      transform: [{ scale }, { translateY }],
+      transform: [{ scale }, { translateY: translateYStack }],
     };
   });
 
@@ -93,6 +100,16 @@ export function SwipeCard({
     return { opacity: 0 };
   });
 
+  const watchTextStyle = useAnimatedStyle(() => {
+    if (!isTop) return { opacity: 0 };
+    // Only show while dragging up and the vertical drag is the dominant axis,
+    // so it doesn't compete with the SEEN/SKIP labels on a diagonal drag.
+    if (translateY.value < 0 && Math.abs(translateY.value) > Math.abs(translateX.value)) {
+      return { opacity: interpolate(translateY.value, [0, -SCREEN_WIDTH * 0.3], [0, 1]) };
+    }
+    return { opacity: 0 };
+  });
+
   return (
     <Animated.View style={[styles.card, animatedStyle]}>
       {posterUrl ? (
@@ -116,6 +133,9 @@ export function SwipeCard({
       <Animated.View style={[styles.overlay, overlayStyle]}>
         <Animated.Text style={[styles.seenLabel, overlayTextStyle]}>SEEN</Animated.Text>
         <Animated.Text style={[styles.skipLabel, skipTextStyle]}>SKIP</Animated.Text>
+      </Animated.View>
+      <Animated.View style={[styles.overlay, watchTextStyle]} pointerEvents="none">
+        <Text style={styles.watchLabel}>WATCH LIST</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -201,6 +221,19 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: borderRadius.sm,
     transform: [{ rotate: '15deg' }],
+    overflow: 'hidden',
+  },
+  watchLabel: {
+    position: 'absolute',
+    top: 40,
+    fontSize: 30,
+    fontWeight: fontWeight.bold,
+    color: colors.accent,
+    borderWidth: 3,
+    borderColor: colors.accent,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: borderRadius.sm,
     overflow: 'hidden',
   },
 });
