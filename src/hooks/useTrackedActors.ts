@@ -18,7 +18,7 @@ export function formatSeenSubtitle(actor: TrackedActor): string {
   return parts.length > 0 ? `${parts.join(', ')} seen` : `${actor.seen_count} seen`;
 }
 
-export function useTrackedActors() {
+export function useTrackedActors(limit = 10) {
   const { user } = useAuth();
   const [actors, setActors] = useState<TrackedActor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export function useTrackedActors() {
       // silently undercounted actors and produced a wrong "most watched" actor.
       const { data, error } = await supabase.rpc('get_tracked_actors', {
         user_id_input: user.id,
-        lim: 10,
+        lim: limit,
       });
 
       if (error || !data) {
@@ -56,7 +56,7 @@ export function useTrackedActors() {
       // Initial-load-only spinner + can't strand on a failed/stuck request.
       setLoading(false);
     }
-  }, [user]);
+  }, [user, limit]);
 
   useEffect(() => {
     fetchActors();
