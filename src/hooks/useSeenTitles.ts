@@ -36,17 +36,34 @@ export function useSeenTitles() {
     fetchSeen();
   }, [fetchSeen]);
 
+  const setSeen = (titleId: number, seen: boolean) => {
+    if (!user) return;
+    setSeenIds((prev) => {
+      const next = new Set(prev);
+      if (seen) next.add(titleId);
+      else next.delete(titleId);
+      seenCache.set(user.id, next);
+      return next;
+    });
+  };
+
   const markAsSeen = async (
     titleId: number,
     mediaType: 'movie' | 'tv',
     title: string,
     posterPath: string | null,
     releaseYear: number | null
-  ) => {
-    if (!user) return;
+  ): Promise<boolean> => {
+    if (!user) return false;
 
-    // Upsert title cache
-    await supabase.from('titles').upsert({
+    // Optimistically reflect the swipe immediately so the UI never lags behind
+    // a rapid deck. We roll back below if the write doesn't land.
+    setSeen(titleId, true);
+
+    // Ensure the title row exists (the seen_titles FK target) and refresh its
+    // cached metadata. This has to succeed before the seen insert, or the FK
+    // fails — which previously dropped swipes silently.
+    const { error: titleError } = await supabase.from('titles').upsert({
       id: titleId,
       media_type: mediaType,
       title,
@@ -54,19 +71,23 @@ export function useSeenTitles() {
       release_year: releaseYear,
     });
 
-    // Insert seen record
+    if (titleError) {
+      setSeen(titleId, false);
+      return false;
+    }
+
     const { error } = await supabase.from('seen_titles').upsert({
       user_id: user.id,
       title_id: titleId,
     });
 
-    if (!error) {
-      setSeenIds((prev) => {
-        const next = new Set(prev).add(titleId);
-        seenCache.set(user.id, next);
-        return next;
-      });
+    if (error) {
+      // Write failed (session expired, network, RLS) — undo the optimistic mark
+      // so local state matches the DB instead of showing a phantom "seen".
+      setSeen(titleId, false);
+      return false;
     }
+    return true;
   };
 
   const markAsUnseen = async (titleId: number) => {

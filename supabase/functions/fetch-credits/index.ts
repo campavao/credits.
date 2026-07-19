@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     const credits = await creditsRes.json();
     // aggregate_credits nests roles differently — normalize to same shape
     const rawCast = credits.cast.slice(0, MAX_CAST);
-    const topCast = title.media_type === 'tv'
+    const normalized = title.media_type === 'tv'
       ? rawCast.map((c: any) => ({
           id: c.id,
           name: c.name,
@@ -72,6 +72,16 @@ Deno.serve(async (req) => {
           character: c.roles?.[0]?.character || null,
         }))
       : rawCast;
+
+    // TMDB can list the same person twice (multiple characters). Dedupe by
+    // actor id, keeping the highest-billed entry — otherwise the appearances
+    // upsert fails with "ON CONFLICT DO UPDATE cannot affect row a second time".
+    const seenActorIds = new Set<number>();
+    const topCast = normalized.filter((c: any) => {
+      if (seenActorIds.has(c.id)) return false;
+      seenActorIds.add(c.id);
+      return true;
+    });
 
     if (topCast.length === 0) {
       // Mark as fetched even if no cast
