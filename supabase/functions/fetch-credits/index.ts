@@ -1,11 +1,14 @@
 // Supabase Edge Function: fetch-credits
 // Triggered by DB webhook on seen_titles INSERT
-// Fetches TMDB credits and upserts top 20 actors + appearances
+// Fetches TMDB credits and upserts top 50 actors + appearances
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const TMDB_BASE = 'https://api.themoviedb.org/3';
-const MAX_CAST = 20;
+// Store the top 50 billed cast (not just 20) so actors billed lower — early
+// roles, ensembles, recurring TV — still count toward "most watched"/Crew.
+// Keep in sync with the billing_order check in migration 00009.
+const MAX_CAST = 50;
 
 interface WebhookPayload {
   type: 'INSERT';

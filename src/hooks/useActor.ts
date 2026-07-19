@@ -7,6 +7,15 @@ interface ActorData {
   filmography: TMDBPersonCreditEntry[];
 }
 
+// TMDB's combined_credits cast includes talk shows, award shows, and news where
+// the person appears as themselves (character "Self", "Herself", "Self - Guest",
+// etc.). Those aren't acting roles, so we drop them from the filmography — they
+// otherwise inflate completion stats and pad the swipe deck with non-films.
+function isSelfAppearance(character: string | undefined): boolean {
+  const ch = (character || '').trim().toLowerCase();
+  return /^self\b/.test(ch) || /^(him|her|them)self\b/.test(ch);
+}
+
 // Module-level cache so navigating actor detail -> swipe (both call useActor)
 // reuses the already-fetched data instead of refetching the whole filmography.
 const actorCache = new Map<number, ActorData>();
@@ -42,10 +51,11 @@ export function useActor(id: number) {
 
         if (cancelled) return;
 
-        // Deduplicate and sort by popularity (vote_count)
+        // Drop self-appearances, deduplicate, then sort by popularity.
         const seen = new Set<number>();
         const filtered = credits.cast
           .filter((c) => {
+            if (isSelfAppearance(c.character)) return false;
             if (seen.has(c.id)) return false;
             seen.add(c.id);
             return true;
