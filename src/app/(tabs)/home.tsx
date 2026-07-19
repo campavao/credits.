@@ -75,6 +75,7 @@ export default function HomeScreen() {
               title="Your Crew"
               data={actors}
               loading={actorsLoading}
+              onSeeAll={actors.length > 0 ? () => router.push('/actors') : undefined}
               keyExtractor={(a) => String(a.id)}
               renderItem={(actor) => (
                 <ActorPortraitCard
