@@ -85,7 +85,7 @@ async function backfillOne(
 
     const credits = await res.json();
     const rawCast = (credits.cast ?? []).slice(0, MAX_CAST);
-    const topCast = title.media_type === 'tv'
+    const normalized = title.media_type === 'tv'
       ? rawCast.map((c: any) => ({
           id: c.id,
           name: c.name,
@@ -93,6 +93,16 @@ async function backfillOne(
           character: c.roles?.[0]?.character || null,
         }))
       : rawCast;
+
+    // Dedupe by actor id (TMDB can list a person twice) so the appearances
+    // upsert doesn't fail with "ON CONFLICT DO UPDATE cannot affect row a
+    // second time".
+    const seenActorIds = new Set<number>();
+    const topCast = normalized.filter((c: any) => {
+      if (seenActorIds.has(c.id)) return false;
+      seenActorIds.add(c.id);
+      return true;
+    });
 
     if (topCast.length === 0) {
       await supabase
