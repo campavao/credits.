@@ -309,6 +309,17 @@ export interface Database {
           total_titles: number;
         }[];
       };
+      get_tracked_actors: {
+        Args: { user_id_input: string; lim?: number };
+        Returns: {
+          id: number;
+          name: string;
+          profile_path: string | null;
+          seen_count: number;
+          movie_count: number;
+          tv_count: number;
+        }[];
+      };
       get_friends_recent_activity: {
         Args: { user_id_input: string; lim?: number };
         Returns: {
